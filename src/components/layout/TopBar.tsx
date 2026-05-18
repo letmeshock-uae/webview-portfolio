@@ -17,11 +17,11 @@ export function TopBar({ projects }: TopBarProps) {
   const hasActiveFilters = activeIndustries.length > 0 || activeTags.length > 0 || activeProduct !== null
 
   return (
-    <header className="sticky top-0 z-30 relative overflow-visible">
+    <header className="sticky top-0 z-30 relative overflow-visible bg-[var(--color-bg)]">
       <div className="progressive-blur">
         <div></div><div></div><div></div><div></div><div></div><div></div>
       </div>
-      <div className="relative z-10 flex h-[var(--topbar-height)] items-center justify-between gap-4 px-6">
+      <div className="flex h-[var(--topbar-height)] items-center justify-between gap-4 px-6">
         <button
           onClick={openSearch}
           className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-[13px] text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-text)]"

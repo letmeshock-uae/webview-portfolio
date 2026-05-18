@@ -78,15 +78,15 @@
   }
 }
 
-/* Progressive blur for TopBar */
+/* Progressive blur for TopBar — hangs below the header */
 .progressive-blur {
   position: absolute;
-  top: 0;
+  top: 100%;
   left: 0;
   right: 0;
-  height: 120px;
+  height: 80px;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 .progressive-blur > div,
 .progressive-blur::before,
