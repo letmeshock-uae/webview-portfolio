@@ -10,13 +10,18 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ products }: MobileNavProps) {
-  const { activeProduct, setProduct } = useCatalogStore()
+  const { activeProduct, setProduct, resetFilters } = useCatalogStore()
+
+  const navigateToProduct = (slug: string | null) => {
+    resetFilters()
+    setProduct(slug)
+  }
 
   return (
     <div className="sm:hidden overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="flex items-center gap-1 px-4 py-2 min-w-max">
         <button
-          onClick={() => setProduct(null)}
+          onClick={() => navigateToProduct(null)}
           data-active={activeProduct === null}
           className={cn(
             "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors whitespace-nowrap",
@@ -31,7 +36,7 @@ export function MobileNav({ products }: MobileNavProps) {
         {products.map((product) => (
           <button
             key={product.id}
-            onClick={() => setProduct(product.slug)}
+            onClick={() => navigateToProduct(product.slug)}
             data-active={activeProduct === product.slug}
             className={cn(
               "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors whitespace-nowrap",

@@ -12,9 +12,9 @@ interface TopBarProps {
 }
 
 export function TopBar({ projects }: TopBarProps) {
-  const { openSearch, toggleFilters, isFiltersOpen, activeIndustries, activeTags, activeProduct, resetFilters } = useCatalogStore()
+  const { openSearch, toggleFilters, isFiltersOpen, activeIndustries, activeTags, resetFilters } = useCatalogStore()
   const activeCount = activeIndustries.length + activeTags.length
-  const hasActiveFilters = activeIndustries.length > 0 || activeTags.length > 0 || activeProduct !== null
+  const hasActiveFilters = activeIndustries.length > 0 || activeTags.length > 0
 
   return (
     <header className="sticky top-0 z-30">

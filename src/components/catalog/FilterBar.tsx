@@ -3,18 +3,22 @@
 import { X } from '@phosphor-icons/react'
 import type { Project } from '@/types'
 import { useCatalogStore } from '@/features/catalog/store'
-import { cn } from '@/lib/utils'
+import { cn, slugify } from '@/lib/utils'
 
 interface FilterBarProps {
   projects: Project[]
 }
 
 export function FilterBar({ projects }: FilterBarProps) {
-  const { activeIndustries, activeTags, toggleIndustry, toggleTag } =
+  const { activeProduct, activeIndustries, activeTags, toggleIndustry, toggleTag } =
     useCatalogStore()
 
-  const allIndustries = [...new Set(projects.flatMap((p) => p.industries))].sort()
-  const allTags = [...new Set(projects.flatMap((p) => p.tags))].sort()
+  const relevantProjects = activeProduct
+    ? projects.filter((p) => p.product.some((prod) => slugify(prod) === activeProduct))
+    : projects
+
+  const allIndustries = [...new Set(relevantProjects.flatMap((p) => p.industries))].sort()
+  const allTags = [...new Set(relevantProjects.flatMap((p) => p.tags))].sort()
 
   if (allIndustries.length === 0 && allTags.length === 0) return null
 

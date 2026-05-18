@@ -2,6 +2,7 @@
 
 import type { Project, Product } from '@/types'
 import { useCatalog } from './useCatalog'
+import { useCatalogStore } from './store'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 import { MobileNav } from '@/components/layout/MobileNav'
@@ -15,6 +16,8 @@ interface CatalogClientProps {
 
 export function CatalogClient({ projects, products }: CatalogClientProps) {
   const filteredProjects = useCatalog(projects)
+  const isSidebarCollapsed = useCatalogStore((s) => s.isSidebarCollapsed)
+  const sidebarWidth = isSidebarCollapsed ? '72px' : 'var(--sidebar-width)'
 
   return (
     <>
@@ -26,7 +29,7 @@ export function CatalogClient({ projects, products }: CatalogClientProps) {
         style={{
           position: 'fixed',
           top: 0,
-          left: 'var(--sidebar-width)',
+          left: sidebarWidth,
           right: 0,
           height: 'calc(var(--topbar-height) + 100px)',
           pointerEvents: 'none',
@@ -35,10 +38,11 @@ export function CatalogClient({ projects, products }: CatalogClientProps) {
           WebkitBackdropFilter: 'blur(20px)',
           maskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 100%)',
+          transition: 'left 200ms',
         }}
       />
 
-      <div className="sm:pl-[var(--sidebar-width)]">
+      <div className="transition-all duration-200" style={{ paddingLeft: sidebarWidth }}>
         <TopBar projects={projects} />
         <MobileNav products={products} />
 

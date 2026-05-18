@@ -10,6 +10,7 @@ interface CatalogStore {
   sortBy: 'updatedAt' | 'title'
   isSearchOpen: boolean
   isFiltersOpen: boolean
+  isSidebarCollapsed: boolean
 
   setQuery: (q: string) => void
   setProduct: (slug: string | null) => void
@@ -20,6 +21,7 @@ interface CatalogStore {
   openSearch: () => void
   closeSearch: () => void
   toggleFilters: () => void
+  toggleSidebar: () => void
 }
 
 export const useCatalogStore = create<CatalogStore>((set) => ({
@@ -30,6 +32,7 @@ export const useCatalogStore = create<CatalogStore>((set) => ({
   sortBy: 'updatedAt',
   isSearchOpen: false,
   isFiltersOpen: false,
+  isSidebarCollapsed: false,
 
   setQuery: (q) => set({ query: q }),
   setProduct: (slug) => set({ activeProduct: slug }),
@@ -49,11 +52,11 @@ export const useCatalogStore = create<CatalogStore>((set) => ({
   resetFilters: () =>
     set({
       query: '',
-      activeProduct: null,
       activeIndustries: [],
       activeTags: [],
     }),
   openSearch: () => set({ isSearchOpen: true }),
   closeSearch: () => set({ isSearchOpen: false }),
   toggleFilters: () => set((state) => ({ isFiltersOpen: !state.isFiltersOpen })),
+  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
 }))

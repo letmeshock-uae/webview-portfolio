@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import Fuse from 'fuse.js'
 import type { Project } from '@/types'
 import { fuseOptions } from '@/lib/fuse'
+import { slugify } from '@/lib/utils'
 import { useCatalogStore } from './store'
 
 export function useCatalog(projects: Project[]) {
@@ -20,7 +21,7 @@ export function useCatalog(projects: Project[]) {
 
     if (activeProduct) {
       result = result.filter((p) =>
-        p.product.some((prod) => prod.toLowerCase() === activeProduct.toLowerCase())
+        p.product.some((prod) => slugify(prod) === activeProduct)
       )
     }
 
