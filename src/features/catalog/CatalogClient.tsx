@@ -21,9 +21,22 @@ export function CatalogClient({ projects, products }: CatalogClientProps) {
       <Sidebar products={products} />
       <SpotlightSearch projects={projects} products={products} />
 
-      <div className="topbar-progressive-blur hidden sm:block">
-        <div></div><div></div><div></div><div></div><div></div><div></div>
-      </div>
+      <div
+        className="hidden sm:block"
+        style={{
+          position: 'fixed',
+          top: 'var(--topbar-height)',
+          left: 'var(--sidebar-width)',
+          right: 0,
+          height: 140,
+          pointerEvents: 'none',
+          zIndex: 25,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
+        }}
+      />
 
       <div className="sm:pl-[var(--sidebar-width)]">
         <TopBar projects={projects} />
