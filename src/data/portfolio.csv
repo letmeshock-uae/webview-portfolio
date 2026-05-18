@@ -1,0 +1,66 @@
+﻿Name,Access,Credentials,Customer demo,Description,Last updated,Link,Product,Resource type
+Datum studio,Internal,"login: datum
+password: thebestcompanyever",No,Datum Studio is a studio for creating the content layer on top of the 3D world.,"May 12, 2026",https://studio.thedatum.ai/,Datum Teller,Product link
+Federal MOF RFP announcment protal UAE,Internal,User name: mailto:info@thedatum.ai. PW: D@tum2026#,No,,"May 12, 2026",https://procurement.gov.ae/page.aspx/en/usr/login,,Government portal / Tender
+Datum website,Public,,No,https://thedatumteam.slack.com/archives/C0ADVQESCB1 - in this channel you can find all submitted forms from the website,"May 12, 2026",https://www.thedatum.ai/,,Website
+Dubai E-Supply,Internal,"PW: D@tum2026#
+Username: mailto:info@thedatum.ai",No,,"May 12, 2026",https://esupply.dubai.gov.ae/esupply/web/index.html#login,,Government portal / Tender
+Opportunities,Internal,,No,,"May 12, 2026",https://docs.google.com/spreadsheets/d/1U47lNlXpibXWqa5LNu73mxUsa-JtUbzFqGXmyIp7e9Q?usp=drive_fs,,CRM/Google Doc
+Space42,Internal,mailto:info@thedtum.ai PW: D@tum2026#,No,Datum is officially a Space42 vendor. This opens up a great deal of possibilities and opportunities specially in Abu Dhabi.,"May 12, 2026",https://fa-euca-saasfaprod1.fa.ocs.oraclecloud.com/fscmUI/faces/FuseWelcome?_afrLoop=67892543209546376&_afrWindowMode=0&_afrWindowId=1arc0csc1x&_adf.ctrl-state=10n58rbk2n_273&_afrFS=16&_afrMT=screen&_afrMFW=1509&_afrMFH=771&_afrMFDW=1512&_afrMFDH=982&_afrMFC=10&_afrMFCI=0&_afrMFM=0&_afrMFR=192&_afrMFG=0&_afrMFS=0&_afrMFO=0,,Partner portal
+Customer demos project in Datum Studio,Internal,Same as for Datum Studio,Yes,"There are 21 available scenes: 
+Pilgrim scenes: all are synthetic (Kaaba, Arafat, Mina, Muzdalifa, Overall)
+6 organic object-scale scene (Protea, Boat, Bee, Ramadan object, Bike, Bull)
+3 outdoor scenes: NY Bull, Frankfurt Continuity by Max Bill, Hatta1 outdoor+indoor scene: Heritage Society
+6 indoor scenes: Gotic church, GYM, Al Ain museum, Centara Mirage Hotel, RIU hotel. Grand Hyatt","May 12, 2026",https://studio.thedatum.ai/projects/80249586-10b6-4a36-aba1-e168a5863ed9,Datum Teller,Product link
+Maqam project,Public,,Yes,Pilgrim Virtual tour with AI-assistant,"May 12, 2026",https://pilgrim.demo.thedatum.one/,Datum Teller,Demo/POC
+Drilling rig,Internal,"Username: datum
+PW: drilldatum",Yes,,,https://drilling-rig.thedatum.ai/,Datum Teller,Demo/POC
+Recon,Internal,"Username: recon
+PW: recondev",Yes,,"May 12, 2026",https://recon.thedatum.ai/,Axion,Demo/POC
+LOD-Streaming,Internal,,Yes,"Demo of LOD-streaming based on Datum SDK. There are several examples (choose the scene on the right corner, button Scene), you can showcase:
+  • Hobbiton
+  • Jastrezebia Gora (Poland)
+  • Coit Tower
+  ","May 12, 2026",https://sdk.demo.thedatum.one/?scene=lod-poland,Datum Teller,Demo
+Hatta scene,Public,,Yes,"Organic outdoor scene, captured with spatial 3D camera, 1 hour of scanning","May 12, 2026",https://studio.thedatum.ai/viewer/dcdea460-7d3b-4d6c-8008-69ba22b5fa80,Datum Teller,Demo scene
+UAE Heritage Society scene,Public,,Yes,"Organic outdoor+indoor scene, captured with spatial 3D camera, 1 hour of scanning","May 12, 2026",https://studio.thedatum.ai/viewer/4cbe74b5-5b71-473e-a8b4-92646e8bdf2a,Datum Teller,Demo scene
+Bull Isolated scene,Public,,Yes,"Organic object-scale scene, captured with Insta360 camera, 8 min of scanning","May 12, 2026",https://studio.thedatum.ai/viewer/28f16203-a07c-4117-8303-3ebabc95e528,Datum Teller,Demo scene
+Bull + environment scene,Public,,Yes,"Organic outdoor scene, captured with Insta360 camera, 8 min of scanning","May 12, 2026",https://studio.thedatum.ai/viewer/cadbe34f-5a5d-40d5-a4ff-913781d5e659,Datum Teller,Demo scene
+Al Ain museum scene,Public,,Yes,"Organic indoor scene of part of the hall in Al Ain Museum, captured with spatial 3D camera, 17 min of scanning","May 12, 2026",https://studio.thedatum.ai/viewer/fa0f388d-e738-4480-9127-7c834ceb92c8,Datum Teller,Demo scene
+Grand Hyatt scene,Public,,Yes,"Organic indoor scene captured with spatial 3D camera, 15 min of scanning","May 13, 2026",https://studio.thedatum.ai/viewer/93111004-afed-4480-a53c-9a2eb7a24840,Datum Teller,Demo scene
+Bike scene,Public,,Yes,"Organic object-scale scene captured with spatial 3D camera, 5 min of scanning","May 13, 2026",https://studio.thedatum.ai/viewer/49602bd7-edfe-4d50-89e0-ca8abee37f14,Datum Teller,Demo scene
+GYM scene,Public,,Yes,"Organic indoor scene, captured with spatial 3D camera, 15 min of scanning","May 13, 2026",https://studio.thedatum.ai/viewer/5af4d814-767d-476d-94d8-8f11e1218601,Datum Teller,Demo scene
+Ramadan object scene,Public,,Yes,"Organic object-scale scene, captured with spatial 3D camera, 3 min of scanning","May 13, 2026",https://studio.thedatum.ai/viewer/8fa118b3-4a3b-4af0-9718-41fcdd6ba657,Datum Teller,Demo scene
+RIU Hotel scene,Public,,Yes,"Organic indoor scene, captured with spatial 3D camera, 15 min of scanning","May 13, 2026",https://studio.thedatum.ai/viewer/af4de17d-a725-41f3-9098-b92f8a92d1c9,Datum Teller,Demo scene
+Centara Mirage Hotel scene,Public,,Yes,"Organic indoor scene, captured with spatial 3D camera, 15 min of scanning","May 13, 2026",https://studio.thedatum.ai/viewer/919729bd-39f1-4c5d-88c0-d90d183125e3,Datum Teller,Demo scene
+Protea scene,Public,,Yes,"Organic object-scale scene, macro photography","May 13, 2026",https://studio.thedatum.ai/viewer/4f054ae8-9ff9-42f0-8dca-dbcbc024c1a0,Datum Teller,Demo scene
+Muzdalifa scene,Public,,Yes,Synthetic scene with collisions,"May 13, 2026",https://studio.thedatum.ai/viewer/3288e810-38d3-41bc-a289-1a83b8eb1222,Datum Teller,Demo scene
+Overall Hajj scene,Public,,Yes,Synthetic scene with collisions,"May 13, 2026",https://studio.thedatum.ai/viewer/b644d3c1-175c-4d47-8fba-e76606dd8967,Datum Teller,Demo scene
+Mina scene,Public,,Yes,Synthetic scene with collisions,"May 13, 2026",https://studio.thedatum.ai/viewer/6047d425-f48f-4fc1-a810-a2e4374730f2,Datum Teller,Demo scene
+Arafat scene,Public,,Yes,Synthetic scene with collisions,"May 13, 2026",https://studio.thedatum.ai/viewer/d6573dc5-d2e7-4bf9-98e7-97ed4699dd1f,Datum Teller,Demo scene
+Kaaba scene,Public,,Yes,Synthetic scene with collisions,"May 13, 2026",https://studio.thedatum.ai/viewer/a2df39da-71d6-48ab-9f77-65a9d8333ad1,Datum Teller,Demo scene
+Bee scene,Public,,Yes,"Organic scene, macro photography, scene made by Danny Bittel (https://www.linkedin.com/in/dany-bittel-06488a59/)","May 13, 2026",https://studio.thedatum.ai/viewer/1f310231-e1ab-4464-bb38-2053d729d621,Datum Teller,Demo scene
+Boat scene,Public,,Yes,"Organic scene, captured with iPhone 16Pro, processed with Datum 3DGS pipeline","May 13, 2026",https://studio.thedatum.ai/viewer/98d5a168-737d-4967-9806-31b6d0043349,Datum Teller,Demo scene
+Frankfurt Continuity by Max Bill scene,Public,,Yes,"Organic outdoor scene, captured with Insta360, processed with Datum 3DGS pipeline","May 13, 2026",https://studio.thedatum.ai/viewer/685fc9f2-1a7b-482a-9f26-c237099a15a3,Datum Teller,Demo scene
+Gotic church scene,Public,,Yes,"Organic outdoor scene, made by Christof Schindelar https://www.linkedin.com/in/christoph-schindelar-79515351/","May 13, 2026",https://studio.thedatum.ai/viewer/e5ca08d5-be9f-4b31-a977-5f5115c7e736,Datum Teller,Demo scene
+Lansy Demo,Internal,,Yes,"Demo for schools, based on IB curricula ","May 13, 2026",https://school.demo.lansy.ai/,Lansy,Demo
+Lansy Pitchdeck,Internal,,Yes,Pitch deck for product for schools,"May 13, 2026",https://www.figma.com/slides/MjjOBBydmU5lAdny9cfyPt/Lansi-for-Schools-Pitchdeck---ENG---Apr-8?node-id=15097-3518&viewport=-32%2C-830%2C0.49&t=EIWvF3Nscm6wTFig-0,Lansy,Pitchdeck Figma
+UAE Heritage Society,Internal,,Yes,"LCC viewer with avatar, this link is used in Meridien edition","May 13, 2026",https://lcc-viewer.xgrids.com/pub/0638d532-fc26-42c9-a53e-14b656bd3f50,External LCC Studio by XGrids,Demo scene
+Al Ain Museum POC,Internal,,Yes,"Gamified experience, 2 options - for Al Ain museum with their logo and text, and white label option. ","May 13, 2026",https://www.figma.com/design/4rgrvA4wwfR5UYyOIN52lF/POC-Proposal?node-id=0-1&p=f&t=Epz1XQANOONwFmAq-0,Datum Teller,Figma
+Maqam Sales KIT,Public,,Yes,"Sales KIT for Maqam project, share pdf, not the figma url","May 13, 2026",https://www.figma.com/design/6Sg4nQHlQzPHE7ZBb5D35B/Maqam-%7C-SalesKit?node-id=391-2324&p=f&t=21qQ9yaQm9FewNBW-0,Datum Teller,SalesKit Figma
+Teller Pitchdeck,Internal,,No,,"May 13, 2026",https://www.figma.com/slides/XL4f5u4HvUC2ukGf7iWsUZ/Teller-Pitchdeck?node-id=1-10909&t=21qQ9yaQm9FewNBW-0,Datum Teller,Pitchdeck Figma
+Meridien Website,Public,,No,,"May 13, 2026",https://mrdn.world/,Meridien,Website
+Hajj and Umrah Edition,Public,,Yes,,"May 13, 2026",https://infographics.work/en/,Meridien,Meridien edition
+Ramesses Edition,Public,,Yes,,"May 14, 2026",https://mrdn.world/ramesses-the-great/,Meridien,Meridien edition
+3DGS Explainer,Internal,,Yes,"Beta-version, not production ready","May 14, 2026",https://3dgs-explainer.beta-mrdn.world/,Meridien,Meridien edition
+Heritage Edition,Public,,Yes,,"May 14, 2026",https://special.mrdn.world/architectural-heritage-society/,Meridien,Meridien edition
+Zain report Edition,Internal,,Yes,,"May 14, 2026",https://readymag.website/meridien/5894430/,Meridien,Meridien edition
+Zain report + AI,Internal,FW: mrdnworldhi,Yes,,"May 14, 2026",https://reporter.beta-mrdn.world/,Meridien,Meridien edition
+"QIC Report Qatar ",Internal,,Yes,,"May 14, 2026",https://extras.mrdn.world/qic/,Meridien,Meridien edition
+Meridien PitchDeck,Public,,Yes,,"May 14, 2026",https://www.figma.com/slides/mO4Lf86zzHmP3qsBFQJex7/Meridien-%7C-Proposal-Presentation?node-id=82-139&t=XokF7LTUADqS0ImP-0,Meridien,Pitchdeck Figma
+Urbi Atlas Shadow Edition,Public,,Yes,,"May 15, 2026",https://atlas.urbi.ae/seeking-shadow/,Meridien,Meridien edition
+Urbi Atlas Green Giants Edition,Public,,Yes,,"May 15, 2026",https://atlas.urbi.ae/green-giants/,Meridien,Meridien edition
+Urbi Atlas Urban Transport Edition,Public,,Yes,,"May 15, 2026",https://atlas.urbi.ae/moving-forward/,Meridien,Meridien edition
+Urbi Atlas Urban planning Edition,Public,,Yes,,"May 15, 2026",https://atlas.urbi.ae/high-expectations/,Meridien,Meridien edition
+FGIC Edition,Public,,Yes,,"May 15, 2026",https://gsw2025.fgic.ae/,Meridien,Meridien edition
+"Balady Atlas special edition ",Internal,,Yes,"Screencast of the edition, the link is currently anavailable","May 15, 2026",https://drive.google.com/file/d/15xorMX3qm0ahkQyEXf9lvdyFpGkXxpjE/view?pli=1,Meridien,Meridien screencast
