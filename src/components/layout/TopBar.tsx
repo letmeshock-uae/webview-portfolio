@@ -17,7 +17,7 @@ export function TopBar({ projects }: TopBarProps) {
   const hasActiveFilters = activeIndustries.length > 0 || activeTags.length > 0 || activeProduct !== null
 
   return (
-    <header className="sticky top-0 z-30 relative">
+    <header className="sticky top-0 z-30 relative overflow-visible">
       <div className="progressive-blur">
         <div></div><div></div><div></div><div></div><div></div><div></div>
       </div>
