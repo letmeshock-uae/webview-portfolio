@@ -21,6 +21,10 @@ export function CatalogClient({ projects, products }: CatalogClientProps) {
       <Sidebar products={products} />
       <SpotlightSearch projects={projects} products={products} />
 
+      <div className="topbar-progressive-blur hidden sm:block">
+        <div></div><div></div><div></div><div></div><div></div><div></div>
+      </div>
+
       <div className="sm:pl-[var(--sidebar-width)]">
         <TopBar projects={projects} />
         <MobileNav products={products} />

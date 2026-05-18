@@ -17,7 +17,7 @@ export function TopBar({ projects }: TopBarProps) {
   const hasActiveFilters = activeIndustries.length > 0 || activeTags.length > 0 || activeProduct !== null
 
   return (
-    <header className="topbar-blur">
+    <header className="sticky top-0 z-30 bg-[var(--color-bg)]">
       <div className="flex h-[var(--topbar-height)] items-center justify-between gap-4 px-6">
         <button
           onClick={openSearch}
