@@ -22,6 +22,7 @@ interface ZipImportResult {
   images: number
   imagesInZip: number
   matched: number
+  errors?: string[]
 }
 
 function slugify(str: string): string {
@@ -306,6 +307,7 @@ export default function AdminPage() {
       const imageUploadEnd = 90
       const coverUrls: Record<string, string> = {}
 
+      let uploadErrors: string[] = []
       for (let i = 0; i < matchedCovers.length; i++) {
         const cover = matchedCovers[i]
         const pct = Math.round(imageUploadStart + ((i + 1) / matchedCovers.length) * (imageUploadEnd - imageUploadStart))
@@ -314,7 +316,10 @@ export default function AdminPage() {
 
         try {
           const imgBuffer = await cover.entry.async('arraybuffer')
-          if (imgBuffer.byteLength >= 3500000) continue
+          if (imgBuffer.byteLength >= 3500000) {
+            uploadErrors.push(`${cover.name}: too large (${Math.round(imgBuffer.byteLength / 1024)}KB)`)
+            continue
+          }
 
           const base64 = arrayBufferToBase64(imgBuffer)
           const uploadRes = await fetch('/api/admin/upload-cover', {
@@ -329,9 +334,13 @@ export default function AdminPage() {
               coverUrls[cover.slug] = result.url
               imagesUploaded++
             }
+          } else {
+            const err = await uploadRes.text()
+            uploadErrors.push(`${cover.name}: ${uploadRes.status} ${err.slice(0, 100)}`)
+            if (uploadErrors.length >= 3) break
           }
-        } catch {
-          // Skip failed uploads
+        } catch (e) {
+          uploadErrors.push(`${cover.name}: ${e instanceof Error ? e.message : 'unknown error'}`)
         }
       }
 
@@ -353,6 +362,7 @@ export default function AdminPage() {
         images: imagesUploaded,
         imagesInZip: imageFiles.size,
         matched: matchedCovers.length,
+        errors: uploadErrors.length > 0 ? uploadErrors : undefined,
       })
       setZipStatus('success')
       setZipProgress('')
@@ -505,6 +515,14 @@ export default function AdminPage() {
                     Images in ZIP: {zipResult.imagesInZip} · Matched to projects: {zipResult.matched}
                   </p>
                 </div>
+                {zipResult.errors && zipResult.errors.length > 0 && (
+                  <div className="mb-3 rounded-[6px] bg-red-500/10 border border-red-500/20 p-3">
+                    <p className="text-[12px] font-medium text-red-400 mb-1">Upload errors:</p>
+                    {zipResult.errors.map((err, i) => (
+                      <p key={i} className="text-[11px] text-red-300/80 truncate">{err}</p>
+                    ))}
+                  </div>
+                )}
                 <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
                   {zipResult.projects.map((name, i) => (
                     <div key={i} className="text-[13px] text-white/70">{name}</div>
