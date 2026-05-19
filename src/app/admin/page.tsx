@@ -261,61 +261,49 @@ export default function AdminPage() {
         throw new Error(data.error || 'Failed to save projects')
       }
 
-      // Upload images one by one
+      // Build a map of folder name -> first image in that folder
+      const folderImageMap: Map<string, { path: string; entry: JSZip.JSZipObject }> = new Map()
+      for (const [imgPath, imgEntry] of imageFiles) {
+        if (imgPath.includes('__MACOSX')) continue
+        const parts = imgPath.split('/')
+        if (parts.length >= 2) {
+          const folder = parts[parts.length - 2]
+          if (!folderImageMap.has(folder)) {
+            folderImageMap.set(folder, { path: imgPath, entry: imgEntry })
+          }
+        }
+      }
+
+      // Upload images one by one, matching by folder name
       let imagesUploaded = 0
       for (const project of projects) {
         const slug = slugify(project.name)
-        let found = false
+        const nameNorm = project.name.toLowerCase().replace(/[^a-z0-9]/g, '')
 
-        for (const [imgPath, imgEntry] of imageFiles) {
-          const imgName = imgPath.split('/').pop()?.toLowerCase() || ''
-          const imgSlug = imgName.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]/g, '')
-          const folderName = imgPath.split('/').slice(-2, -1)[0]?.toLowerCase() || ''
+        let matched: { path: string; entry: JSZip.JSZipObject } | null = null
 
-          if (imgSlug.includes(slug) || slug.includes(imgSlug) ||
-              folderName.includes(slug) || slug.includes(folderName.replace(/[^a-z0-9]/g, ''))) {
-            const ext = imgPath.split('.').pop()?.toLowerCase() || 'png'
-            const imgBuffer = await imgEntry.async('arraybuffer')
-
-            // Only upload if under 3.5MB (Vercel limit with overhead)
-            if (imgBuffer.byteLength < 3500000) {
-              setZipProgress(`Uploading cover: ${project.name}...`)
-              const base64 = arrayBufferToBase64(imgBuffer)
-
-              await fetch('/api/admin/upload-cover', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slug, data: base64, ext }),
-              })
-              imagesUploaded++
-            }
-            found = true
+        for (const [folder, img] of folderImageMap) {
+          const folderNorm = folder.toLowerCase().replace(/[^a-z0-9]/g, '')
+          if (folderNorm === nameNorm || folderNorm.includes(nameNorm) || nameNorm.includes(folderNorm)) {
+            matched = img
             break
           }
         }
 
-        // If no exact match, try first image in a folder with similar name
-        if (!found) {
-          for (const [imgPath, imgEntry] of imageFiles) {
-            const parts = imgPath.split('/')
-            if (parts.length >= 2) {
-              const folder = parts[parts.length - 2].toLowerCase().replace(/[^a-z0-9]/g, '')
-              if (folder && (folder.includes(slug.slice(0, 10)) || slug.includes(folder.slice(0, 10)))) {
-                const ext = imgPath.split('.').pop()?.toLowerCase() || 'png'
-                const imgBuffer = await imgEntry.async('arraybuffer')
-                if (imgBuffer.byteLength < 3500000) {
-                  setZipProgress(`Uploading cover: ${project.name}...`)
-                  const base64 = arrayBufferToBase64(imgBuffer)
-                  await fetch('/api/admin/upload-cover', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug, data: base64, ext }),
-                  })
-                  imagesUploaded++
-                }
-                break
-              }
-            }
+        if (matched) {
+          const ext = matched.path.split('.').pop()?.toLowerCase() || 'jpeg'
+          const imgBuffer = await matched.entry.async('arraybuffer')
+
+          if (imgBuffer.byteLength < 3500000) {
+            setZipProgress(`Uploading cover: ${project.name}...`)
+            const base64 = arrayBufferToBase64(imgBuffer)
+
+            await fetch('/api/admin/upload-cover', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ slug, data: base64, ext }),
+            })
+            imagesUploaded++
           }
         }
       }
