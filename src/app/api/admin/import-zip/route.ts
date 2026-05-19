@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { verifyAdminSession } from '@/lib/admin-auth'
-import { processNotionZip } from '@/lib/zip-import'
+import { appendProjectToCsv } from '@/lib/csv-writer'
+import { writeFileSync, existsSync, mkdirSync } from 'fs'
+import { join } from 'path'
 
 export const maxDuration = 60
+
+interface ProjectRow {
+  name: string
+  access: string
+  credentials: string
+  customerDemo: string
+  description: string
+  lastUpdated: string
+  link: string
+  product: string
+  resourceType: string
+}
+
+interface ImportPayload {
+  projects: ProjectRow[]
+  images?: Array<{ slug: string; data: string; ext: string }>
+}
 
 export async function POST(req: NextRequest) {
   const isAdmin = await verifyAdminSession()
@@ -12,45 +31,34 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const contentType = req.headers.get('content-type') || ''
+    const payload: ImportPayload = await req.json()
 
-    let buffer: Buffer
-
-    if (contentType.includes('application/json')) {
-      // Base64 encoded upload (bypasses proxy body size limits)
-      const { data, filename } = await req.json()
-      if (!data || !filename) {
-        return NextResponse.json({ error: 'Missing data or filename' }, { status: 400 })
-      }
-      if (!filename.endsWith('.zip')) {
-        return NextResponse.json({ error: 'File must be a .zip archive' }, { status: 400 })
-      }
-      buffer = Buffer.from(data, 'base64')
-    } else {
-      // FormData upload
-      const formData = await req.formData()
-      const file = formData.get('file') as File | null
-      if (!file) {
-        return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
-      }
-      if (!file.name.endsWith('.zip')) {
-        return NextResponse.json({ error: 'File must be a .zip archive' }, { status: 400 })
-      }
-      buffer = Buffer.from(await file.arrayBuffer())
+    if (!payload.projects || payload.projects.length === 0) {
+      return NextResponse.json({ error: 'No projects in payload' }, { status: 400 })
     }
 
-    const imported = await processNotionZip(buffer)
+    // Save images
+    const coversDir = join(process.cwd(), 'public', 'covers')
+    if (!existsSync(coversDir)) mkdirSync(coversDir, { recursive: true })
 
-    if (imported.length === 0) {
-      return NextResponse.json({ error: 'No projects found in the archive. Make sure it contains a CSV or HTML export from Notion.' }, { status: 400 })
+    if (payload.images) {
+      for (const img of payload.images) {
+        const destPath = join(coversDir, `${img.slug}.${img.ext}`)
+        const buffer = Buffer.from(img.data, 'base64')
+        writeFileSync(destPath, buffer)
+      }
+    }
+
+    // Append projects to CSV
+    for (const project of payload.projects) {
+      appendProjectToCsv(project)
     }
 
     revalidatePath('/')
 
     return NextResponse.json({
       ok: true,
-      count: imported.length,
-      projects: imported,
+      count: payload.projects.length,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Import failed'

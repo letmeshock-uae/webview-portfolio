@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Lock, Link as LinkIcon, CircleNotch, CheckCircle, XCircle, FileZip, UploadSimple } from '@phosphor-icons/react'
+import JSZip from 'jszip'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 type Tab = 'notion' | 'zip'
@@ -17,13 +18,105 @@ interface ImportResult {
 
 interface ZipImportResult {
   count: number
-  projects: Array<{
-    title: string
-    product: string
-    resourceType: string
-    link: string
-    coverSaved: boolean
-  }>
+  projects: string[]
+  images: number
+}
+
+function slugify(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function parseCsv(text: string): Record<string, string>[] {
+  const lines: string[] = []
+  let current = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        current += '"'
+        i++
+      } else {
+        inQuotes = !inQuotes
+      }
+    } else if (ch === '\n' && !inQuotes) {
+      lines.push(current)
+      current = ''
+    } else if (ch === '\r' && !inQuotes) {
+      // skip
+    } else {
+      current += ch
+    }
+  }
+  if (current.trim()) lines.push(current)
+
+  if (lines.length < 2) return []
+
+  const headerLine = lines[0]
+  const headers = splitCsvLine(headerLine)
+
+  const rows: Record<string, string>[] = []
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue
+    const values = splitCsvLine(lines[i])
+    const row: Record<string, string> = {}
+    headers.forEach((h, idx) => {
+      row[h.trim()] = (values[idx] || '').trim()
+    })
+    rows.push(row)
+  }
+  return rows
+}
+
+function splitCsvLine(line: string): string[] {
+  const fields: string[] = []
+  let current = ''
+  let inQuotes = false
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"'
+        i++
+      } else {
+        inQuotes = !inQuotes
+      }
+    } else if (ch === ',' && !inQuotes) {
+      fields.push(current)
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  fields.push(current)
+  return fields
+}
+
+function findValue(row: Record<string, string>, ...keys: string[]): string {
+  for (const k of Object.keys(row)) {
+    const lower = k.toLowerCase()
+    for (const target of keys) {
+      if (lower === target.toLowerCase() || lower.includes(target.toLowerCase())) {
+        return row[k] || ''
+      }
+    }
+  }
+  return ''
+}
+
+function isImageFile(name: string): boolean {
+  return /\.(png|jpg|jpeg|webp|gif)$/i.test(name)
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
 }
 
 export default function AdminPage() {
@@ -43,6 +136,7 @@ export default function AdminPage() {
   const [zipStatus, setZipStatus] = useState<Status>('idle')
   const [zipError, setZipError] = useState('')
   const [zipResult, setZipResult] = useState<ZipImportResult | null>(null)
+  const [zipProgress, setZipProgress] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -84,7 +178,6 @@ export default function AdminPage() {
         body: JSON.stringify({ notionUrl: notionUrl.trim() }),
       })
       const data = await res.json()
-
       if (!res.ok) throw new Error(data.error || 'Import failed')
 
       setNotionResult(data.project)
@@ -106,33 +199,138 @@ export default function AdminPage() {
     setZipStatus('loading')
     setZipError('')
     setZipResult(null)
+    setZipProgress('Reading ZIP...')
 
     try {
       const arrayBuffer = await file.arrayBuffer()
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      )
+      const zip = await JSZip.loadAsync(arrayBuffer)
 
+      setZipProgress('Parsing contents...')
+
+      // Find CSV files
+      const csvFiles: string[] = []
+      const imageFiles: Map<string, JSZip.JSZipObject> = new Map()
+
+      zip.forEach((path, entry) => {
+        if (entry.dir) return
+        if (path.toLowerCase().endsWith('.csv')) csvFiles.push(path)
+        if (isImageFile(path)) imageFiles.set(path, entry)
+      })
+
+      if (csvFiles.length === 0) {
+        throw new Error('No CSV file found in the archive')
+      }
+
+      // Parse the first CSV
+      const csvFile = zip.file(csvFiles[0])
+      if (!csvFile) throw new Error('Could not read CSV')
+
+      let csvText = await csvFile.async('string')
+      if (csvText.charCodeAt(0) === 0xFEFF) csvText = csvText.slice(1)
+
+      const rows = parseCsv(csvText)
+      if (rows.length === 0) throw new Error('CSV is empty')
+
+      setZipProgress(`Found ${rows.length} projects, processing...`)
+
+      // Build projects
+      const projects = rows
+        .map((row) => ({
+          name: findValue(row, 'name', 'title'),
+          access: findValue(row, 'access') || 'Internal',
+          credentials: findValue(row, 'credentials'),
+          customerDemo: findValue(row, 'customer demo', 'demo') || 'No',
+          description: findValue(row, 'description'),
+          lastUpdated: findValue(row, 'last updated', 'updated', 'date'),
+          link: findValue(row, 'link', 'url'),
+          product: findValue(row, 'product'),
+          resourceType: findValue(row, 'resource type', 'type'),
+        }))
+        .filter((p) => p.name)
+
+      // Send projects to server (small JSON, no images)
+      setZipProgress('Saving projects...')
       const res = await fetch('/api/admin/import-zip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: base64, filename: file.name }),
+        body: JSON.stringify({ projects }),
       })
 
-      const contentType = res.headers.get('content-type') || ''
-      if (!contentType.includes('application/json')) {
-        const text = await res.text()
-        throw new Error(text.slice(0, 100) || `Server error: ${res.status}`)
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to save projects')
       }
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Import failed')
+      // Upload images one by one
+      let imagesUploaded = 0
+      for (const project of projects) {
+        const slug = slugify(project.name)
+        let found = false
 
-      setZipResult(data)
+        for (const [imgPath, imgEntry] of imageFiles) {
+          const imgName = imgPath.split('/').pop()?.toLowerCase() || ''
+          const imgSlug = imgName.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]/g, '')
+          const folderName = imgPath.split('/').slice(-2, -1)[0]?.toLowerCase() || ''
+
+          if (imgSlug.includes(slug) || slug.includes(imgSlug) ||
+              folderName.includes(slug) || slug.includes(folderName.replace(/[^a-z0-9]/g, ''))) {
+            const ext = imgPath.split('.').pop()?.toLowerCase() || 'png'
+            const imgBuffer = await imgEntry.async('arraybuffer')
+
+            // Only upload if under 3.5MB (Vercel limit with overhead)
+            if (imgBuffer.byteLength < 3500000) {
+              setZipProgress(`Uploading cover: ${project.name}...`)
+              const base64 = arrayBufferToBase64(imgBuffer)
+
+              await fetch('/api/admin/upload-cover', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slug, data: base64, ext }),
+              })
+              imagesUploaded++
+            }
+            found = true
+            break
+          }
+        }
+
+        // If no exact match, try first image in a folder with similar name
+        if (!found) {
+          for (const [imgPath, imgEntry] of imageFiles) {
+            const parts = imgPath.split('/')
+            if (parts.length >= 2) {
+              const folder = parts[parts.length - 2].toLowerCase().replace(/[^a-z0-9]/g, '')
+              if (folder && (folder.includes(slug.slice(0, 10)) || slug.includes(folder.slice(0, 10)))) {
+                const ext = imgPath.split('.').pop()?.toLowerCase() || 'png'
+                const imgBuffer = await imgEntry.async('arraybuffer')
+                if (imgBuffer.byteLength < 3500000) {
+                  setZipProgress(`Uploading cover: ${project.name}...`)
+                  const base64 = arrayBufferToBase64(imgBuffer)
+                  await fetch('/api/admin/upload-cover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug, data: base64, ext }),
+                  })
+                  imagesUploaded++
+                }
+                break
+              }
+            }
+          }
+        }
+      }
+
+      setZipResult({
+        count: projects.length,
+        projects: projects.map((p) => p.name),
+        images: imagesUploaded,
+      })
       setZipStatus('success')
+      setZipProgress('')
     } catch (err) {
       setZipError(err instanceof Error ? err.message : 'Import failed')
       setZipStatus('error')
+      setZipProgress('')
     }
   }
 
@@ -231,7 +429,10 @@ export default function AdminPage() {
               }`}
             >
               {zipStatus === 'loading' ? (
-                <CircleNotch size={32} className="animate-spin text-white/40" />
+                <div className="flex flex-col items-center gap-2">
+                  <CircleNotch size={32} className="animate-spin text-white/40" />
+                  {zipProgress && <p className="text-[13px] text-white/40">{zipProgress}</p>}
+                </div>
               ) : (
                 <>
                   <UploadSimple size={32} className="text-white/30" />
@@ -250,7 +451,7 @@ export default function AdminPage() {
               className="hidden"
             />
             <p className="text-[12px] text-white/30 mt-3">
-              Export your Notion database as ZIP (HTML or CSV format). Images will be extracted automatically.
+              Export your Notion database as CSV+ZIP. Images will be matched and uploaded automatically.
             </p>
 
             {zipStatus === 'success' && zipResult && (
@@ -258,17 +459,12 @@ export default function AdminPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle size={18} className="text-green-400" weight="fill" />
                   <span className="text-[14px] font-medium text-green-400">
-                    {zipResult.count} project{zipResult.count !== 1 ? 's' : ''} imported
+                    {zipResult.count} project{zipResult.count !== 1 ? 's' : ''} imported, {zipResult.images} cover{zipResult.images !== 1 ? 's' : ''} saved
                   </span>
                 </div>
                 <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
-                  {zipResult.projects.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between text-[13px]">
-                      <span className="text-white truncate">{p.title}</span>
-                      <span className="text-white/30 flex-shrink-0 ml-2">
-                        {p.coverSaved ? 'with cover' : 'no cover'}
-                      </span>
-                    </div>
+                  {zipResult.projects.map((name, i) => (
+                    <div key={i} className="text-[13px] text-white/70">{name}</div>
                   ))}
                 </div>
               </div>
@@ -335,12 +531,6 @@ export default function AdminPage() {
                       <dd className="text-white">{notionResult.product}</dd>
                     </>
                   )}
-                  {notionResult.resourceType && (
-                    <>
-                      <dt className="text-white/40">Type</dt>
-                      <dd className="text-white">{notionResult.resourceType}</dd>
-                    </>
-                  )}
                   {notionResult.link && (
                     <>
                       <dt className="text-white/40">Link</dt>
@@ -351,8 +541,6 @@ export default function AdminPage() {
                       </dd>
                     </>
                   )}
-                  <dt className="text-white/40">Cover</dt>
-                  <dd className="text-white">{notionResult.coverPath ? 'Saved' : 'None'}</dd>
                 </dl>
               </div>
             )}
