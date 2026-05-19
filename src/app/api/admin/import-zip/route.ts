@@ -6,6 +6,17 @@ import { slugify } from '@/lib/utils'
 
 export const maxDuration = 60
 
+function safeDate(str: string): string {
+  if (!str) return new Date().toISOString()
+  try {
+    const d = new Date(str)
+    if (isNaN(d.getTime())) return new Date().toISOString()
+    return d.toISOString()
+  } catch {
+    return new Date().toISOString()
+  }
+}
+
 interface ProjectRow {
   name: string
   access: string
@@ -50,8 +61,8 @@ export async function POST(req: NextRequest) {
         tags,
         externalUrl: p.link || null,
         status: p.access || 'Internal',
-        updatedAt: p.lastUpdated ? new Date(p.lastUpdated).toISOString() : new Date().toISOString(),
-        createdAt: p.lastUpdated ? new Date(p.lastUpdated).toISOString() : new Date().toISOString(),
+        updatedAt: safeDate(p.lastUpdated),
+        createdAt: safeDate(p.lastUpdated),
       }
     })
 
