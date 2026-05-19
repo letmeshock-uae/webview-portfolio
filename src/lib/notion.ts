@@ -4,6 +4,7 @@ import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import type { Project, Product } from '@/types'
 import { slugify } from '@/lib/utils'
+import { getBlobProjects } from '@/lib/blob-storage'
 
 const PRODUCT_COLORS: Record<string, string> = {
   'datum teller': '#6e56cf',
@@ -77,6 +78,8 @@ function transformCsvRow(row: CsvRow, index: number): Project {
 }
 
 export async function fetchProjects(): Promise<Project[]> {
+  // Load static CSV projects
+  let csvProjects: Project[] = []
   const csvPath = join(process.cwd(), 'src', 'data', 'portfolio.csv')
 
   try {
@@ -90,11 +93,34 @@ export async function fetchProjects(): Promise<Project[]> {
       relax_column_count: true,
     })
 
-    return records.map((row, i) => transformCsvRow(row, i))
+    csvProjects = records.map((row, i) => transformCsvRow(row, i))
   } catch (error) {
     console.error('Failed to read portfolio CSV:', error)
-    return []
   }
+
+  // Load dynamic projects from Vercel Blob
+  let blobProjects: Project[] = []
+  try {
+    const blobData = await getBlobProjects()
+    blobProjects = blobData.map((bp) => ({
+      id: bp.id,
+      title: bp.title,
+      description: bp.description,
+      coverImage: null,
+      coverUrl: bp.coverUrl,
+      product: bp.product,
+      industries: bp.industries,
+      tags: bp.tags,
+      externalUrl: bp.externalUrl,
+      status: bp.status,
+      updatedAt: bp.updatedAt,
+      createdAt: bp.createdAt,
+    }))
+  } catch (error) {
+    console.error('Failed to load blob projects:', error)
+  }
+
+  return [...csvProjects, ...blobProjects]
 }
 
 export function deriveProducts(projects: Project[]): Product[] {

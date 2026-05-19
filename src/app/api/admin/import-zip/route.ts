@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { verifyAdminSession } from '@/lib/admin-auth'
-import { appendProjectToCsv } from '@/lib/csv-writer'
-import { writeFileSync, existsSync, mkdirSync } from 'fs'
-import { join } from 'path'
+import { getBlobProjects, saveBlobProjects, type BlobProject } from '@/lib/blob-storage'
+import { slugify } from '@/lib/utils'
 
 export const maxDuration = 60
 
@@ -19,50 +18,56 @@ interface ProjectRow {
   resourceType: string
 }
 
-interface ImportPayload {
-  projects: ProjectRow[]
-  images?: Array<{ slug: string; data: string; ext: string }>
-}
-
 export async function POST(req: NextRequest) {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (process.env.VERCEL) {
-    return NextResponse.json({ error: 'Import is only available in local development. Run the project locally, import, then push to GitHub.' }, { status: 400 })
-  }
-
   try {
-    const payload: ImportPayload = await req.json()
+    const { projects } = await req.json() as { projects: ProjectRow[] }
 
-    if (!payload.projects || payload.projects.length === 0) {
+    if (!projects || projects.length === 0) {
       return NextResponse.json({ error: 'No projects in payload' }, { status: 400 })
     }
 
-    // Save images
-    const coversDir = join(process.cwd(), 'public', 'covers')
-    if (!existsSync(coversDir)) mkdirSync(coversDir, { recursive: true })
+    // Load existing blob projects
+    const existing = await getBlobProjects()
 
-    if (payload.images) {
-      for (const img of payload.images) {
-        const destPath = join(coversDir, `${img.slug}.${img.ext}`)
-        const buffer = Buffer.from(img.data, 'base64')
-        writeFileSync(destPath, buffer)
+    // Convert incoming rows to BlobProject format
+    const newProjects: BlobProject[] = projects.map((p, i) => {
+      const resourceType = p.resourceType?.trim()
+      const tags: string[] = resourceType ? [resourceType] : []
+      if (p.customerDemo?.toLowerCase() === 'yes') tags.push('Customer Demo')
+
+      return {
+        id: `blob-${Date.now()}-${i}`,
+        title: p.name,
+        description: p.description || '',
+        coverUrl: null,
+        product: p.product ? [p.product.trim()] : [],
+        industries: [],
+        tags,
+        externalUrl: p.link || null,
+        status: p.access || 'Internal',
+        updatedAt: p.lastUpdated ? new Date(p.lastUpdated).toISOString() : new Date().toISOString(),
+        createdAt: p.lastUpdated ? new Date(p.lastUpdated).toISOString() : new Date().toISOString(),
       }
-    }
+    })
 
-    // Append projects to CSV
-    for (const project of payload.projects) {
-      appendProjectToCsv(project)
-    }
+    // Deduplicate by title
+    const existingTitles = new Set(existing.map((p) => slugify(p.title)))
+    const uniqueNew = newProjects.filter((p) => !existingTitles.has(slugify(p.title)))
+
+    const merged = [...existing, ...uniqueNew]
+    await saveBlobProjects(merged)
 
     revalidatePath('/')
 
     return NextResponse.json({
       ok: true,
-      count: payload.projects.length,
+      count: uniqueNew.length,
+      skipped: newProjects.length - uniqueNew.length,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Import failed'

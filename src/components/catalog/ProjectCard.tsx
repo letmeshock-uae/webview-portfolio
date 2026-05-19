@@ -31,9 +31,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
       className="group relative aspect-square w-full overflow-hidden rounded-[16px]"
       style={{ cursor: project.externalUrl ? 'pointer' : 'default' }}
     >
-      {project.coverImage ? (
+      {(project.coverImage || project.coverUrl) ? (
         <Image
-          src={project.coverImage}
+          src={(project.coverUrl || project.coverImage)!}
           alt={project.title}
           fill
           className="object-cover"

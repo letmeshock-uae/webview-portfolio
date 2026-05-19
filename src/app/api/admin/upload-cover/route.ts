@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminSession } from '@/lib/admin-auth'
-import { writeFileSync, existsSync, mkdirSync } from 'fs'
-import { join } from 'path'
+import { uploadCover, getBlobProjects, saveBlobProjects } from '@/lib/blob-storage'
+import { slugify } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  if (process.env.VERCEL) {
-    return NextResponse.json({ error: 'Upload only available locally' }, { status: 400 })
   }
 
   try {
@@ -20,14 +16,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing slug, data, or ext' }, { status: 400 })
     }
 
-    const coversDir = join(process.cwd(), 'public', 'covers')
-    if (!existsSync(coversDir)) mkdirSync(coversDir, { recursive: true })
-
-    const destPath = join(coversDir, `${slug}.${ext}`)
     const buffer = Buffer.from(data, 'base64')
-    writeFileSync(destPath, buffer)
+    const coverUrl = await uploadCover(slug, buffer, ext)
 
-    return NextResponse.json({ ok: true, path: `/covers/${slug}.${ext}` })
+    // Update the project's coverUrl in blob storage
+    const projects = await getBlobProjects()
+    const updated = projects.map((p) => {
+      if (slugify(p.title) === slug) {
+        return { ...p, coverUrl }
+      }
+      return p
+    })
+
+    if (JSON.stringify(updated) !== JSON.stringify(projects)) {
+      await saveBlobProjects(updated)
+    }
+
+    return NextResponse.json({ ok: true, url: coverUrl })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Upload failed'
     console.error('Cover upload error:', err)

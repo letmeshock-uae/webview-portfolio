@@ -3,6 +3,7 @@ export interface Project {
   title: string
   description: string
   coverImage: string | null
+  coverUrl?: string | null
   product: string[]
   industries: string[]
   tags: string[]
