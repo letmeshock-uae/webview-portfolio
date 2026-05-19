@@ -42,7 +42,11 @@ export function CatalogClient({ projects, products }: CatalogClientProps) {
         }}
       />
 
-      <div className="transition-all duration-200" style={{ paddingLeft: sidebarWidth }}>
+      <div className="sm:transition-all sm:duration-200" style={{ paddingLeft: `var(--applied-sidebar-width)` }}>
+        <style>{`
+          :root { --applied-sidebar-width: 0px; }
+          @media (min-width: 640px) { :root { --applied-sidebar-width: ${sidebarWidth}; } }
+        `}</style>
         <TopBar projects={projects} />
         <MobileNav products={products} />
 
