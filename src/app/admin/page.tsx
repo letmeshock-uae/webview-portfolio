@@ -27,6 +27,7 @@ function slugify(str: string): string {
 }
 
 function parseCsv(text: string): Record<string, string>[] {
+  // Split into lines preserving quoted fields (which may contain newlines)
   const lines: string[] = []
   let current = ''
   let inQuotes = false
@@ -34,17 +35,13 @@ function parseCsv(text: string): Record<string, string>[] {
   for (let i = 0; i < text.length; i++) {
     const ch = text[i]
     if (ch === '"') {
-      if (inQuotes && text[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
+      inQuotes = !inQuotes
+      current += ch
     } else if (ch === '\n' && !inQuotes) {
       lines.push(current)
       current = ''
     } else if (ch === '\r' && !inQuotes) {
-      // skip
+      // skip carriage return
     } else {
       current += ch
     }
@@ -53,8 +50,7 @@ function parseCsv(text: string): Record<string, string>[] {
 
   if (lines.length < 2) return []
 
-  const headerLine = lines[0]
-  const headers = splitCsvLine(headerLine)
+  const headers = splitCsvLine(lines[0])
 
   const rows: Record<string, string>[] = []
   for (let i = 1; i < lines.length; i++) {
