@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 import { ArrowUpRight } from '@phosphor-icons/react'
 import type { Project } from '@/types'
 import { getCoverGradient, formatRelative } from '@/lib/utils'
@@ -32,12 +31,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
       style={{ cursor: project.externalUrl ? 'pointer' : 'default' }}
     >
       {(project.coverImage || project.coverUrl) ? (
-        <Image
+        <img
           src={(project.coverUrl || project.coverImage)!}
           alt={project.title}
-          fill
-          className="object-cover"
-          unoptimized
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
         />
       ) : (
         <div
