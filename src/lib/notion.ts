@@ -81,10 +81,31 @@ function transformCsvRow(row: CsvRow, index: number): Project {
 }
 
 export async function fetchProjects(): Promise<Project[]> {
-  // Load static CSV projects
-  let csvProjects: Project[] = []
-  const csvPath = join(process.cwd(), 'src', 'data', 'portfolio.csv')
+  // Try blob storage first — if it has data, use it as the sole source
+  try {
+    const blobData = await getBlobProjects()
+    if (blobData.length > 0) {
+      return blobData.map((bp) => ({
+        id: bp.id,
+        title: bp.title,
+        description: bp.description,
+        coverImage: null,
+        coverUrl: bp.coverUrl,
+        product: bp.product,
+        industries: bp.industries,
+        tags: bp.tags,
+        externalUrl: bp.externalUrl,
+        status: bp.status,
+        updatedAt: bp.updatedAt,
+        createdAt: bp.createdAt,
+      }))
+    }
+  } catch (error) {
+    console.error('Failed to load blob projects:', error)
+  }
 
+  // Fallback: load from local CSV if no blob data
+  const csvPath = join(process.cwd(), 'src', 'data', 'portfolio.csv')
   try {
     let csvContent = readFileSync(csvPath, 'utf-8')
     if (csvContent.charCodeAt(0) === 0xFEFF) {
@@ -96,34 +117,12 @@ export async function fetchProjects(): Promise<Project[]> {
       relax_column_count: true,
     })
 
-    csvProjects = records.map((row, i) => transformCsvRow(row, i))
+    return records.map((row, i) => transformCsvRow(row, i))
   } catch (error) {
     console.error('Failed to read portfolio CSV:', error)
   }
 
-  // Load dynamic projects from Vercel Blob
-  let blobProjects: Project[] = []
-  try {
-    const blobData = await getBlobProjects()
-    blobProjects = blobData.map((bp) => ({
-      id: bp.id,
-      title: bp.title,
-      description: bp.description,
-      coverImage: null,
-      coverUrl: bp.coverUrl,
-      product: bp.product,
-      industries: bp.industries,
-      tags: bp.tags,
-      externalUrl: bp.externalUrl,
-      status: bp.status,
-      updatedAt: bp.updatedAt,
-      createdAt: bp.createdAt,
-    }))
-  } catch (error) {
-    console.error('Failed to load blob projects:', error)
-  }
-
-  return [...csvProjects, ...blobProjects]
+  return []
 }
 
 export function deriveProducts(projects: Project[]): Product[] {
