@@ -205,7 +205,35 @@ export default function AdminPage() {
     try {
       setZipPercent(5)
       const arrayBuffer = await file.arrayBuffer()
-      const zip = await JSZip.loadAsync(arrayBuffer)
+      let zip = await JSZip.loadAsync(arrayBuffer)
+
+      setZipPercent(8)
+      setZipProgress('Checking archive structure...')
+
+      // Handle nested ZIP (Notion sometimes wraps export in outer ZIP)
+      const innerZips: string[] = []
+      zip.forEach((path, entry) => {
+        if (!entry.dir && path.toLowerCase().endsWith('.zip')) {
+          innerZips.push(path)
+        }
+      })
+
+      if (innerZips.length > 0) {
+        // No CSV at top level, but there's a ZIP inside — extract it
+        const csvAtTop: string[] = []
+        zip.forEach((path, entry) => {
+          if (!entry.dir && path.toLowerCase().endsWith('.csv')) csvAtTop.push(path)
+        })
+
+        if (csvAtTop.length === 0) {
+          setZipProgress('Extracting inner archive...')
+          const innerEntry = zip.file(innerZips[0])
+          if (innerEntry) {
+            const innerBuffer = await innerEntry.async('arraybuffer')
+            zip = await JSZip.loadAsync(innerBuffer)
+          }
+        }
+      }
 
       setZipPercent(10)
       setZipProgress('Parsing contents...')
@@ -224,8 +252,9 @@ export default function AdminPage() {
         throw new Error('No CSV file found in the archive')
       }
 
-      // Parse the first CSV
-      const csvFile = zip.file(csvFiles[0])
+      // Parse the first non-MACOSX CSV
+      const csvPath = csvFiles.find((p) => !p.includes('__MACOSX')) || csvFiles[0]
+      const csvFile = zip.file(csvPath)
       if (!csvFile) throw new Error('Could not read CSV')
 
       let csvText = await csvFile.async('string')
@@ -269,14 +298,19 @@ export default function AdminPage() {
       setZipPercent(40)
 
       // Build a map of folder name -> first image in that folder
-      const folderImageMap: Map<string, { path: string; entry: JSZip.JSZipObject }> = new Map()
+      // Strip Notion hashes from folder names (e.g. "Drilling rig 35e0d5f714df800d96beef87d7d6bb56" → "Drilling rig")
+      function stripNotionHash(name: string): string {
+        return name.replace(/\s+[0-9a-f]{20,}$/i, '').trim()
+      }
+
+      const folderImageMap: Map<string, { path: string; entry: JSZip.JSZipObject; cleanName: string }> = new Map()
       for (const [imgPath, imgEntry] of imageFiles) {
         if (imgPath.includes('__MACOSX')) continue
         const parts = imgPath.split('/')
         if (parts.length >= 2) {
           const folder = parts[parts.length - 2]
           if (!folderImageMap.has(folder)) {
-            folderImageMap.set(folder, { path: imgPath, entry: imgEntry })
+            folderImageMap.set(folder, { path: imgPath, entry: imgEntry, cleanName: stripNotionHash(folder) })
           }
         }
       }
@@ -289,8 +323,8 @@ export default function AdminPage() {
         const slug = slugify(project.name)
         const nameNorm = project.name.toLowerCase().replace(/[^a-z0-9]/g, '')
 
-        for (const [folder, img] of folderImageMap) {
-          const folderNorm = folder.toLowerCase().replace(/[^a-z0-9]/g, '')
+        for (const [, img] of folderImageMap) {
+          const folderNorm = img.cleanName.toLowerCase().replace(/[^a-z0-9]/g, '')
           if (folderNorm === nameNorm || folderNorm.includes(nameNorm) || nameNorm.includes(folderNorm)) {
             const ext = img.path.split('.').pop()?.toLowerCase() || 'jpeg'
             matchedCovers.push({ slug, entry: img.entry, ext, name: project.name })
@@ -316,8 +350,8 @@ export default function AdminPage() {
 
         try {
           const imgBuffer = await cover.entry.async('arraybuffer')
-          if (imgBuffer.byteLength >= 3500000) {
-            uploadErrors.push(`${cover.name}: too large (${Math.round(imgBuffer.byteLength / 1024)}KB)`)
+          if (imgBuffer.byteLength >= 4200000) {
+            uploadErrors.push(`${cover.name}: too large (${Math.round(imgBuffer.byteLength / 1024)}KB, max ~4MB)`)
             continue
           }
 
