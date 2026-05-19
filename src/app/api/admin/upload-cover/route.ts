@@ -10,8 +10,35 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { slug, data, ext } = await req.json()
+    const body = await req.json()
 
+    // Batch mode: update multiple coverUrls at once
+    if (body.covers && Array.isArray(body.covers)) {
+      const covers: { slug: string; data: string; ext: string }[] = body.covers
+      const urlMap: Record<string, string> = {}
+
+      for (const cover of covers) {
+        const buffer = Buffer.from(cover.data, 'base64')
+        const url = await uploadCover(cover.slug, buffer, cover.ext)
+        urlMap[cover.slug] = url
+      }
+
+      // Single read-modify-write for all covers
+      const projects = await getBlobProjects()
+      const updated = projects.map((p) => {
+        const slug = slugify(p.title)
+        if (urlMap[slug]) {
+          return { ...p, coverUrl: urlMap[slug] }
+        }
+        return p
+      })
+      await saveBlobProjects(updated)
+
+      return NextResponse.json({ ok: true, uploaded: Object.keys(urlMap).length })
+    }
+
+    // Single mode (legacy)
+    const { slug, data, ext } = body
     if (!slug || !data || !ext) {
       return NextResponse.json({ error: 'Missing slug, data, or ext' }, { status: 400 })
     }
@@ -19,7 +46,6 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(data, 'base64')
     const coverUrl = await uploadCover(slug, buffer, ext)
 
-    // Update the project's coverUrl in blob storage
     const projects = await getBlobProjects()
     const updated = projects.map((p) => {
       if (slugify(p.title) === slug) {

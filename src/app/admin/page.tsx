@@ -278,42 +278,59 @@ export default function AdminPage() {
         }
       }
 
-      // Upload images one by one, matching by folder name
-      let imagesUploaded = 0
-      const imageUploadStart = 40
-      const imageUploadEnd = 95
-      for (let i = 0; i < projects.length; i++) {
-        const project = projects[i]
+      // Match images to projects by folder name
+      setZipProgress('Matching covers...')
+      const matchedCovers: { slug: string; entry: JSZip.JSZipObject; ext: string; name: string }[] = []
+
+      for (const project of projects) {
         const slug = slugify(project.name)
         const nameNorm = project.name.toLowerCase().replace(/[^a-z0-9]/g, '')
-
-        const pct = Math.round(imageUploadStart + ((i + 1) / projects.length) * (imageUploadEnd - imageUploadStart))
-        setZipPercent(pct)
-
-        let matched: { path: string; entry: JSZip.JSZipObject } | null = null
 
         for (const [folder, img] of folderImageMap) {
           const folderNorm = folder.toLowerCase().replace(/[^a-z0-9]/g, '')
           if (folderNorm === nameNorm || folderNorm.includes(nameNorm) || nameNorm.includes(folderNorm)) {
-            matched = img
+            const ext = img.path.split('.').pop()?.toLowerCase() || 'jpeg'
+            matchedCovers.push({ slug, entry: img.entry, ext, name: project.name })
             break
           }
         }
+      }
 
-        if (matched) {
-          const ext = matched.path.split('.').pop()?.toLowerCase() || 'jpeg'
-          const imgBuffer = await matched.entry.async('arraybuffer')
+      // Upload covers in batches to avoid race conditions
+      let imagesUploaded = 0
+      const BATCH_SIZE = 3
+      const imageUploadStart = 40
+      const imageUploadEnd = 95
 
+      for (let batchStart = 0; batchStart < matchedCovers.length; batchStart += BATCH_SIZE) {
+        const batch = matchedCovers.slice(batchStart, batchStart + BATCH_SIZE)
+        const coversPayload: { slug: string; data: string; ext: string }[] = []
+
+        for (const cover of batch) {
+          const imgBuffer = await cover.entry.async('arraybuffer')
           if (imgBuffer.byteLength < 3500000) {
-            setZipProgress(`Uploading cover: ${project.name}...`)
-            const base64 = arrayBufferToBase64(imgBuffer)
-
-            await fetch('/api/admin/upload-cover', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ slug, data: base64, ext }),
+            coversPayload.push({
+              slug: cover.slug,
+              data: arrayBufferToBase64(imgBuffer),
+              ext: cover.ext,
             })
-            imagesUploaded++
+          }
+        }
+
+        if (coversPayload.length > 0) {
+          setZipProgress(`Uploading covers (${batchStart + 1}-${Math.min(batchStart + BATCH_SIZE, matchedCovers.length)} of ${matchedCovers.length})...`)
+          const pct = Math.round(imageUploadStart + ((batchStart + coversPayload.length) / matchedCovers.length) * (imageUploadEnd - imageUploadStart))
+          setZipPercent(pct)
+
+          const uploadRes = await fetch('/api/admin/upload-cover', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ covers: coversPayload }),
+          })
+
+          if (uploadRes.ok) {
+            const result = await uploadRes.json()
+            imagesUploaded += result.uploaded || coversPayload.length
           }
         }
       }
