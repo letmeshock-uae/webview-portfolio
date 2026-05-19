@@ -1,4 +1,4 @@
-import { put, list, del } from '@vercel/blob'
+import { put, list } from '@vercel/blob'
 
 function hasBlobToken(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN
@@ -42,19 +42,10 @@ export async function saveBlobProjects(projects: BlobProject[]): Promise<void> {
     throw new Error('BLOB_READ_WRITE_TOKEN not configured. Set it up in Vercel Dashboard -> Storage -> Blob.')
   }
 
-  // Delete old blob if exists
-  try {
-    const { blobs } = await list({ prefix: PROJECTS_BLOB_PATH })
-    for (const blob of blobs) {
-      await del(blob.url)
-    }
-  } catch {
-    // ignore
-  }
-
   await put(PROJECTS_BLOB_PATH, JSON.stringify(projects), {
     access: 'public',
     contentType: 'application/json',
+    allowOverwrite: true,
   })
 }
 
@@ -68,6 +59,7 @@ export async function uploadCover(slug: string, buffer: Buffer, ext: string): Pr
   const blob = await put(path, buffer, {
     access: 'public',
     contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+    allowOverwrite: true,
   })
 
   return blob.url

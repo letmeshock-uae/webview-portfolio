@@ -337,7 +337,6 @@ export default function AdminPage() {
           } else {
             const err = await uploadRes.text()
             uploadErrors.push(`${cover.name}: ${uploadRes.status} ${err.slice(0, 100)}`)
-            if (uploadErrors.length >= 3) break
           }
         } catch (e) {
           uploadErrors.push(`${cover.name}: ${e instanceof Error ? e.message : 'unknown error'}`)
