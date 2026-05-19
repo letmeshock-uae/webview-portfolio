@@ -20,6 +20,8 @@ interface ZipImportResult {
   count: number
   projects: string[]
   images: number
+  imagesInZip: number
+  matched: number
 }
 
 function slugify(str: string): string {
@@ -279,7 +281,7 @@ export default function AdminPage() {
       }
 
       // Match images to projects by folder name
-      setZipProgress('Matching covers...')
+      setZipProgress(`Found ${imageFiles.size} images in ZIP, matching...`)
       const matchedCovers: { slug: string; entry: JSZip.JSZipObject; ext: string; name: string }[] = []
 
       for (const project of projects) {
@@ -296,43 +298,52 @@ export default function AdminPage() {
         }
       }
 
-      // Upload covers in batches to avoid race conditions
+      setZipProgress(`Matched ${matchedCovers.length} covers, uploading...`)
+
+      // Upload covers one by one, then batch-update project data at the end
       let imagesUploaded = 0
-      const BATCH_SIZE = 3
       const imageUploadStart = 40
-      const imageUploadEnd = 95
+      const imageUploadEnd = 90
+      const coverUrls: Record<string, string> = {}
 
-      for (let batchStart = 0; batchStart < matchedCovers.length; batchStart += BATCH_SIZE) {
-        const batch = matchedCovers.slice(batchStart, batchStart + BATCH_SIZE)
-        const coversPayload: { slug: string; data: string; ext: string }[] = []
+      for (let i = 0; i < matchedCovers.length; i++) {
+        const cover = matchedCovers[i]
+        const pct = Math.round(imageUploadStart + ((i + 1) / matchedCovers.length) * (imageUploadEnd - imageUploadStart))
+        setZipPercent(pct)
+        setZipProgress(`Uploading cover ${i + 1}/${matchedCovers.length}: ${cover.name}`)
 
-        for (const cover of batch) {
+        try {
           const imgBuffer = await cover.entry.async('arraybuffer')
-          if (imgBuffer.byteLength < 3500000) {
-            coversPayload.push({
-              slug: cover.slug,
-              data: arrayBufferToBase64(imgBuffer),
-              ext: cover.ext,
-            })
-          }
-        }
+          if (imgBuffer.byteLength >= 3500000) continue
 
-        if (coversPayload.length > 0) {
-          setZipProgress(`Uploading covers (${batchStart + 1}-${Math.min(batchStart + BATCH_SIZE, matchedCovers.length)} of ${matchedCovers.length})...`)
-          const pct = Math.round(imageUploadStart + ((batchStart + coversPayload.length) / matchedCovers.length) * (imageUploadEnd - imageUploadStart))
-          setZipPercent(pct)
-
+          const base64 = arrayBufferToBase64(imgBuffer)
           const uploadRes = await fetch('/api/admin/upload-cover', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ covers: coversPayload }),
+            body: JSON.stringify({ slug: cover.slug, data: base64, ext: cover.ext, skipProjectUpdate: true }),
           })
 
           if (uploadRes.ok) {
             const result = await uploadRes.json()
-            imagesUploaded += result.uploaded || coversPayload.length
+            if (result.url) {
+              coverUrls[cover.slug] = result.url
+              imagesUploaded++
+            }
           }
+        } catch {
+          // Skip failed uploads
         }
+      }
+
+      // Single batch update of all coverUrls in project data
+      if (Object.keys(coverUrls).length > 0) {
+        setZipPercent(92)
+        setZipProgress('Saving cover URLs to projects...')
+        await fetch('/api/admin/upload-cover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updateUrls: coverUrls }),
+        })
       }
 
       setZipPercent(100)
@@ -340,6 +351,8 @@ export default function AdminPage() {
         count: projects.length,
         projects: projects.map((p) => p.name),
         images: imagesUploaded,
+        imagesInZip: imageFiles.size,
+        matched: matchedCovers.length,
       })
       setZipStatus('success')
       setZipProgress('')
@@ -481,11 +494,16 @@ export default function AdminPage() {
 
             {zipStatus === 'success' && zipResult && (
               <div className="mt-6 rounded-[8px] border border-green-500/20 bg-green-500/5 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle size={18} className="text-green-400" weight="fill" />
-                  <span className="text-[14px] font-medium text-green-400">
-                    {zipResult.count} project{zipResult.count !== 1 ? 's' : ''} imported, {zipResult.images} cover{zipResult.images !== 1 ? 's' : ''} saved
-                  </span>
+                <div className="flex flex-col gap-1 mb-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={18} className="text-green-400" weight="fill" />
+                    <span className="text-[14px] font-medium text-green-400">
+                      {zipResult.count} project{zipResult.count !== 1 ? 's' : ''} imported, {zipResult.images} cover{zipResult.images !== 1 ? 's' : ''} uploaded
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-white/40 ml-[26px]">
+                    Images in ZIP: {zipResult.imagesInZip} · Matched to projects: {zipResult.matched}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
                   {zipResult.projects.map((name, i) => (
