@@ -48,7 +48,10 @@ export async function POST(req: NextRequest) {
     // Convert incoming rows to BlobProject format
     const newProjects: BlobProject[] = projects.map((p, i) => {
       const resourceType = p.resourceType?.trim()
-      const tags: string[] = resourceType ? [resourceType] : []
+      const access = p.access?.trim() || 'Internal'
+      const tags: string[] = []
+      if (resourceType) tags.push(resourceType)
+      if (access) tags.push(access)
       if (p.customerDemo?.toLowerCase() === 'yes') tags.push('Customer Demo')
 
       return {
@@ -60,25 +63,26 @@ export async function POST(req: NextRequest) {
         industries: [],
         tags,
         externalUrl: p.link || null,
-        status: p.access || 'Internal',
+        status: access,
         updatedAt: safeDate(p.lastUpdated),
         createdAt: safeDate(p.lastUpdated),
       }
     })
 
-    // Deduplicate by title
-    const existingTitles = new Set(existing.map((p) => slugify(p.title)))
-    const uniqueNew = newProjects.filter((p) => !existingTitles.has(slugify(p.title)))
-
-    const merged = [...existing, ...uniqueNew]
+    // Replace existing projects with same titles, add new ones
+    const newBySlug = new Map(newProjects.map((p) => [slugify(p.title), p]))
+    const kept = existing.filter((p) => !newBySlug.has(slugify(p.title)))
+    const merged = [...kept, ...newProjects]
     await saveBlobProjects(merged)
 
     revalidatePath('/')
 
+    const replaced = existing.length - kept.length
+
     return NextResponse.json({
       ok: true,
-      count: uniqueNew.length,
-      skipped: newProjects.length - uniqueNew.length,
+      count: newProjects.length,
+      replaced,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Import failed'

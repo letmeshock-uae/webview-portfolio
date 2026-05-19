@@ -54,10 +54,13 @@ function findCoverImage(title: string): string | null {
 function transformCsvRow(row: CsvRow, index: number): Project {
   const product = row.Product ? [row.Product.trim()] : []
   const resourceType = row['Resource type']?.trim()
-  const tags: string[] = resourceType ? [resourceType] : []
+  const tags: string[] = []
   const industries: string[] = []
   const title = row.Name?.trim() || 'Untitled'
+  const access = row.Access?.trim() || 'Internal'
 
+  if (resourceType) tags.push(resourceType)
+  if (access) tags.push(access)
   if (row['Customer demo']?.trim().toLowerCase() === 'yes') {
     tags.push('Customer Demo')
   }
@@ -71,7 +74,7 @@ function transformCsvRow(row: CsvRow, index: number): Project {
     industries,
     tags,
     externalUrl: row.Link?.trim() || null,
-    status: row.Access?.trim() || 'Internal',
+    status: access,
     updatedAt: parseDate(row['Last updated']),
     createdAt: parseDate(row['Last updated']),
   }
