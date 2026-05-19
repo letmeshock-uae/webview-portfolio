@@ -24,14 +24,17 @@ export function Sidebar({ products }: SidebarProps) {
     >
       <div className="flex h-full w-full flex-col justify-between overflow-hidden rounded-tl-[24px] rounded-tr-[24px] rounded-bl-[24px] rounded-br-[8px] bg-white/[0.04] p-[8px]">
         {/* Header */}
-        <div className={cn(
-          "flex items-center rounded-tl-[16px] rounded-tr-[16px] rounded-bl-[12px] rounded-br-[12px] bg-white/5 p-[6px]",
-          isSidebarCollapsed ? "justify-center" : "gap-[12px]"
-        )}>
-          <div className="flex h-[44px] w-[44px] items-center justify-center rounded-[10px] bg-white/10 flex-shrink-0">
-            <span className="text-white text-[20px] font-semibold">D</span>
+        {isSidebarCollapsed ? (
+          <div className="flex items-center justify-center">
+            <div className="flex h-[36px] w-[36px] items-center justify-center rounded-[10px] bg-white/10 flex-shrink-0">
+              <span className="text-white text-[16px] font-semibold">D</span>
+            </div>
           </div>
-          {!isSidebarCollapsed && (
+        ) : (
+          <div className="flex items-center gap-[12px] rounded-tl-[16px] rounded-tr-[16px] rounded-bl-[12px] rounded-br-[12px] bg-white/5 p-[6px]">
+            <div className="flex h-[44px] w-[44px] items-center justify-center rounded-[10px] bg-white/10 flex-shrink-0">
+              <span className="text-white text-[20px] font-semibold">D</span>
+            </div>
             <div className="flex flex-col gap-[2px]">
               <span className="font-[var(--font-sans)] text-[16px] font-medium text-white leading-normal">
                 Datum
@@ -40,8 +43,8 @@ export function Sidebar({ products }: SidebarProps) {
                 Organization
               </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Spacer top */}
         <div className="flex-1" />
