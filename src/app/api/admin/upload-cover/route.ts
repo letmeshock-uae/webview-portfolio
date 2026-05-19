@@ -9,6 +9,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  if (process.env.VERCEL) {
+    return NextResponse.json({ error: 'Upload only available locally' }, { status: 400 })
+  }
+
   try {
     const { slug, data, ext } = await req.json()
 

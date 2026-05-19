@@ -451,7 +451,7 @@ export default function AdminPage() {
               className="hidden"
             />
             <p className="text-[12px] text-white/30 mt-3">
-              Export your Notion database as CSV+ZIP. Images will be matched and uploaded automatically.
+              Export your Notion database as CSV+ZIP. Run import locally (<code className="text-white/40">npm run dev</code>), then push to GitHub to deploy.
             </p>
 
             {zipStatus === 'success' && zipResult && (

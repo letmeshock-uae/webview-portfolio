@@ -30,6 +30,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  if (process.env.VERCEL) {
+    return NextResponse.json({ error: 'Import is only available in local development. Run the project locally, import, then push to GitHub.' }, { status: 400 })
+  }
+
   try {
     const payload: ImportPayload = await req.json()
 
