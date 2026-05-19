@@ -27,7 +27,7 @@ export async function getBlobProjects(): Promise<BlobProject[]> {
     const { blobs } = await list({ prefix: PROJECTS_BLOB_PATH })
     if (blobs.length === 0) return []
 
-    const response = await fetch(blobs[0].url)
+    const response = await fetch(blobs[0].url, { cache: 'no-store' })
     if (!response.ok) return []
 
     const data = await response.json()

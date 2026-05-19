@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { verifyAdminSession } from '@/lib/admin-auth'
 import { uploadCover, getBlobProjects, saveBlobProjects } from '@/lib/blob-storage'
 import { slugify } from '@/lib/utils'
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
         return p
       })
       await saveBlobProjects(updated)
+      revalidatePath('/')
       return NextResponse.json({ ok: true, updated: Object.keys(urlMap).length })
     }
 
