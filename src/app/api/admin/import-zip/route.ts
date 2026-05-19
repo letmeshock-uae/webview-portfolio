@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache'
 import { verifyAdminSession } from '@/lib/admin-auth'
 import { processNotionZip } from '@/lib/zip-import'
 
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) {
@@ -10,18 +12,33 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const formData = await req.formData()
-    const file = formData.get('file') as File | null
+    const contentType = req.headers.get('content-type') || ''
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+    let buffer: Buffer
+
+    if (contentType.includes('application/json')) {
+      // Base64 encoded upload (bypasses proxy body size limits)
+      const { data, filename } = await req.json()
+      if (!data || !filename) {
+        return NextResponse.json({ error: 'Missing data or filename' }, { status: 400 })
+      }
+      if (!filename.endsWith('.zip')) {
+        return NextResponse.json({ error: 'File must be a .zip archive' }, { status: 400 })
+      }
+      buffer = Buffer.from(data, 'base64')
+    } else {
+      // FormData upload
+      const formData = await req.formData()
+      const file = formData.get('file') as File | null
+      if (!file) {
+        return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+      }
+      if (!file.name.endsWith('.zip')) {
+        return NextResponse.json({ error: 'File must be a .zip archive' }, { status: 400 })
+      }
+      buffer = Buffer.from(await file.arrayBuffer())
     }
 
-    if (!file.name.endsWith('.zip')) {
-      return NextResponse.json({ error: 'File must be a .zip archive' }, { status: 400 })
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer())
     const imported = await processNotionZip(buffer)
 
     if (imported.length === 0) {

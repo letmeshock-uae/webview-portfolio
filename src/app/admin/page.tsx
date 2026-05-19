@@ -107,16 +107,25 @@ export default function AdminPage() {
     setZipError('')
     setZipResult(null)
 
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
+      const arrayBuffer = await file.arrayBuffer()
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      )
+
       const res = await fetch('/api/admin/import-zip', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: base64, filename: file.name }),
       })
-      const data = await res.json()
 
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        const text = await res.text()
+        throw new Error(text.slice(0, 100) || `Server error: ${res.status}`)
+      }
+
+      const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Import failed')
 
       setZipResult(data)
