@@ -133,6 +133,7 @@ export default function AdminPage() {
   const [zipError, setZipError] = useState('')
   const [zipResult, setZipResult] = useState<ZipImportResult | null>(null)
   const [zipProgress, setZipProgress] = useState('')
+  const [zipPercent, setZipPercent] = useState(0)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -196,11 +197,14 @@ export default function AdminPage() {
     setZipError('')
     setZipResult(null)
     setZipProgress('Reading ZIP...')
+    setZipPercent(0)
 
     try {
+      setZipPercent(5)
       const arrayBuffer = await file.arrayBuffer()
       const zip = await JSZip.loadAsync(arrayBuffer)
 
+      setZipPercent(10)
       setZipProgress('Parsing contents...')
 
       // Find CSV files
@@ -227,6 +231,7 @@ export default function AdminPage() {
       const rows = parseCsv(csvText)
       if (rows.length === 0) throw new Error('CSV is empty')
 
+      setZipPercent(20)
       setZipProgress(`Found ${rows.length} projects, processing...`)
 
       // Build projects
@@ -245,6 +250,7 @@ export default function AdminPage() {
         .filter((p) => p.name)
 
       // Send projects to server (small JSON, no images)
+      setZipPercent(30)
       setZipProgress('Saving projects...')
       const res = await fetch('/api/admin/import-zip', {
         method: 'POST',
@@ -256,6 +262,8 @@ export default function AdminPage() {
         const data = await res.json()
         throw new Error(data.error || 'Failed to save projects')
       }
+
+      setZipPercent(40)
 
       // Build a map of folder name -> first image in that folder
       const folderImageMap: Map<string, { path: string; entry: JSZip.JSZipObject }> = new Map()
@@ -272,9 +280,15 @@ export default function AdminPage() {
 
       // Upload images one by one, matching by folder name
       let imagesUploaded = 0
-      for (const project of projects) {
+      const imageUploadStart = 40
+      const imageUploadEnd = 95
+      for (let i = 0; i < projects.length; i++) {
+        const project = projects[i]
         const slug = slugify(project.name)
         const nameNorm = project.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+        const pct = Math.round(imageUploadStart + ((i + 1) / projects.length) * (imageUploadEnd - imageUploadStart))
+        setZipPercent(pct)
 
         let matched: { path: string; entry: JSZip.JSZipObject } | null = null
 
@@ -304,6 +318,7 @@ export default function AdminPage() {
         }
       }
 
+      setZipPercent(100)
       setZipResult({
         count: projects.length,
         projects: projects.map((p) => p.name),
@@ -315,6 +330,7 @@ export default function AdminPage() {
       setZipError(err instanceof Error ? err.message : 'Import failed')
       setZipStatus('error')
       setZipProgress('')
+      setZipPercent(0)
     }
   }
 
@@ -405,17 +421,25 @@ export default function AdminPage() {
               onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`flex flex-col items-center justify-center gap-3 rounded-[8px] border-2 border-dashed p-8 cursor-pointer transition-colors ${
-                dragOver
-                  ? 'border-white/40 bg-white/5'
-                  : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
+              onClick={() => zipStatus !== 'loading' && fileInputRef.current?.click()}
+              className={`relative flex flex-col items-center justify-center gap-3 rounded-[8px] border-2 border-dashed p-8 overflow-hidden transition-colors ${
+                zipStatus === 'loading'
+                  ? 'border-white/20 cursor-default'
+                  : dragOver
+                    ? 'border-white/40 bg-white/5 cursor-pointer'
+                    : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02] cursor-pointer'
               }`}
             >
+              {zipStatus === 'loading' && (
+                <div
+                  className="absolute inset-0 bg-white/[0.06] transition-all duration-300 ease-out"
+                  style={{ width: `${zipPercent}%` }}
+                />
+              )}
               {zipStatus === 'loading' ? (
-                <div className="flex flex-col items-center gap-2">
-                  <CircleNotch size={32} className="animate-spin text-white/40" />
-                  {zipProgress && <p className="text-[13px] text-white/40">{zipProgress}</p>}
+                <div className="relative z-10 flex flex-col items-center gap-2">
+                  <span className="text-[28px] font-semibold text-white tabular-nums">{zipPercent}%</span>
+                  {zipProgress && <p className="text-[13px] text-white/50">{zipProgress}</p>}
                 </div>
               ) : (
                 <>
@@ -451,6 +475,12 @@ export default function AdminPage() {
                     <div key={i} className="text-[13px] text-white/70">{name}</div>
                   ))}
                 </div>
+                <a
+                  href="/"
+                  className="mt-4 flex w-full items-center justify-center rounded-[8px] bg-white/10 py-3 text-[14px] font-medium text-white hover:bg-white/15 transition-colors"
+                >
+                  Back to home screen
+                </a>
               </div>
             )}
 
