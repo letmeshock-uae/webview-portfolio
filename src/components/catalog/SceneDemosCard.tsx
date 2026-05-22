@@ -37,11 +37,12 @@ export function SceneDemosCard({ count, thumbnails }: SceneDemosCardProps) {
           <div className="relative flex-1 flex items-center overflow-hidden rounded-[var(--radius-md)] my-3 -mx-5">
             <div className="absolute inset-y-0 left-0 w-8 z-10 bg-gradient-to-r from-[var(--axion-card)] to-transparent pointer-events-none" />
             <div className="absolute inset-y-0 right-0 w-8 z-10 bg-gradient-to-l from-[var(--axion-card)] to-transparent pointer-events-none" />
-            <div className="flex gap-2 animate-marquee">
+            <div className="flex gap-4 animate-marquee items-center">
               {doubled.map((src, i) => (
                 <div
                   key={i}
                   className="flex-shrink-0 w-[216px] h-[144px] rounded-[var(--radius-sm)] overflow-hidden"
+                  style={{ transform: `rotate(${((i * 7 + 3) % 11) - 5}deg)` }}
                 >
                   <img
                     src={src}
