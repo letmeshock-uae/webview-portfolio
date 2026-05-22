@@ -10,38 +10,36 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ products }: MobileNavProps) {
-  const { activeProduct, setProduct, resetFilters } = useCatalogStore()
-
-  const navigateToProduct = (slug: string | null) => {
-    resetFilters()
-    setProduct(slug)
-  }
+  const { activeProduct, setProduct } = useCatalogStore()
 
   return (
-    <div className="sm:hidden overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+    <div className="sm:hidden overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--axion-panel)]">
       <div className="flex items-center gap-1 px-4 py-2 min-w-max">
         <button
-          onClick={() => navigateToProduct(null)}
+          onClick={() => setProduct(null)}
           data-active={activeProduct === null}
           className={cn(
-            "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors whitespace-nowrap",
-            "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-alt)]",
-            "data-[active=true]:bg-[var(--color-primary)]/10 data-[active=true]:text-[var(--color-primary)]"
+            'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors whitespace-nowrap',
+            'text-[var(--fg-tertiary)] hover:bg-[var(--axion-card)]',
+            'data-[active=true]:bg-[rgba(255,255,255,0.05)] data-[active=true]:text-[var(--fg-on-active)]',
           )}
         >
-          <GridFour size={14} weight={activeProduct === null ? 'fill' : 'regular'} />
+          <GridFour
+            size={14}
+            weight={activeProduct === null ? 'fill' : 'regular'}
+          />
           All
         </button>
 
         {products.map((product) => (
           <button
             key={product.id}
-            onClick={() => navigateToProduct(product.slug)}
+            onClick={() => setProduct(product.slug)}
             data-active={activeProduct === product.slug}
             className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors whitespace-nowrap",
-              "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-alt)]",
-              "data-[active=true]:bg-[var(--color-primary)]/10 data-[active=true]:text-[var(--color-primary)]"
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors whitespace-nowrap',
+              'text-[var(--fg-tertiary)] hover:bg-[var(--axion-card)]',
+              'data-[active=true]:bg-[rgba(255,255,255,0.05)] data-[active=true]:text-[var(--fg-on-active)]',
             )}
           >
             <span

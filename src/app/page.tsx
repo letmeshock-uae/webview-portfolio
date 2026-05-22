@@ -1,11 +1,11 @@
-import { fetchProjects, deriveProducts } from '@/lib/notion'
+import { fetchDemos } from '@/lib/data'
+import { PRODUCTS } from '@/types'
 import { CatalogClient } from '@/features/catalog/CatalogClient'
 
 export const revalidate = 60
 
 export default async function HomePage() {
-  const projects = await fetchProjects()
-  const products = deriveProducts(projects)
+  const demos = await fetchDemos()
 
-  return <CatalogClient projects={projects} products={products} />
+  return <CatalogClient demos={demos} products={PRODUCTS} />
 }

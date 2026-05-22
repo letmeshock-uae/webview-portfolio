@@ -1,18 +1,17 @@
 'use client'
 
+import { PRODUCTS } from '@/types'
+
 interface ProductBadgeProps {
   name: string
   color?: string
 }
 
-const PRODUCT_COLOR_MAP: Record<string, string> = {
-  teller: '#6e56cf',
-  lansy: '#3dd68c',
-  axion: '#f0a050',
-}
-
 export function ProductBadge({ name, color }: ProductBadgeProps) {
-  const badgeColor = color || PRODUCT_COLOR_MAP[name.toLowerCase()] || '#5b9cf6'
+  const found = PRODUCTS.find(
+    (p) => p.name.toLowerCase() === name.toLowerCase(),
+  )
+  const badgeColor = color || found?.color || '#5b9cf6'
 
   return (
     <span

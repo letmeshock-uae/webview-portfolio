@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function slugify(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
 export function formatRelative(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()
@@ -23,15 +27,24 @@ export function formatRelative(dateString: string): string {
   return 'just now'
 }
 
-export function slugify(str: string): string {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+export function parseCredentials(raw: string | null): { login: string; password: string } | null {
+  if (!raw) return null
+  const loginMatch = raw.match(/(?:login|user(?:name)?|email)\s*:\s*(.+)/i)
+  const passMatch = raw.match(/(?:pass(?:word)?|pw)\s*:\s*(.+)/i)
+  if (!loginMatch && !passMatch) return null
+  return {
+    login: loginMatch?.[1]?.trim() || '',
+    password: passMatch?.[1]?.trim() || '',
+  }
 }
 
 const coverGradients: Record<string, string> = {
-  teller: 'linear-gradient(135deg, #2d1f5e 0%, #1a1a1d 100%)',
-  lansy: 'linear-gradient(135deg, #0f3d28 0%, #1a1a1d 100%)',
-  axion: 'linear-gradient(135deg, #3d2800 0%, #1a1a1d 100%)',
-  default: 'linear-gradient(135deg, #1a2040 0%, #1a1a1d 100%)',
+  'datum teller': 'linear-gradient(135deg, #2d1f5e 0%, #000000 100%)',
+  axion: 'linear-gradient(135deg, #3d2800 0%, #000000 100%)',
+  meridien: 'linear-gradient(135deg, #1a2040 0%, #000000 100%)',
+  lansy: 'linear-gradient(135deg, #0f3d28 0%, #000000 100%)',
+  'external lcc': 'linear-gradient(135deg, #3d1020 0%, #000000 100%)',
+  default: 'linear-gradient(135deg, #1a1a2e 0%, #000000 100%)',
 }
 
 export function getCoverGradient(productName?: string): string {

@@ -2,51 +2,69 @@
 
 import { useMemo } from 'react'
 import Fuse from 'fuse.js'
-import type { Project } from '@/types'
+import type { Demo } from '@/types'
 import { fuseOptions } from '@/lib/fuse'
 import { slugify } from '@/lib/utils'
 import { useCatalogStore } from './store'
 
-export function useCatalog(projects: Project[]) {
-  const { query, activeProduct, activeIndustries, activeTags, sortBy } = useCatalogStore()
+export function useCatalog(demos: Demo[]) {
+  const { activeProduct, activeTags, activeIndustries, activeClients, liveDemo, sortBy } =
+    useCatalogStore()
 
-  const fuse = useMemo(() => new Fuse(projects, fuseOptions), [projects])
+  const nonCoverDemos = useMemo(() => demos.filter((d) => !d.isCover), [demos])
+  const fuse = useMemo(() => new Fuse(nonCoverDemos, fuseOptions), [nonCoverDemos])
 
-  const filtered = useMemo(() => {
-    let result = projects
-
-    if (query.trim().length >= 2) {
-      result = fuse.search(query).map((r) => r.item)
-    }
+  return useMemo(() => {
+    let result = nonCoverDemos
 
     if (activeProduct) {
-      result = result.filter((p) =>
-        p.product.some((prod) => slugify(prod) === activeProduct)
-      )
-    }
-
-    if (activeIndustries.length > 0) {
-      result = result.filter((p) =>
-        activeIndustries.every((ind) => p.industries.includes(ind))
-      )
+      const productName =
+        { 'datum-teller': 'Datum Teller', axion: 'Axion', meridien: 'Meridien', lansy: 'Lansy', 'external-lcc': 'External LCC' }[activeProduct] || ''
+      result = result.filter((d) => d.product === productName)
     }
 
     if (activeTags.length > 0) {
-      result = result.filter((p) =>
-        activeTags.some((tag) => p.tags.includes(tag))
+      result = result.filter((d) => activeTags.some((tag) => d.tags.includes(tag)))
+    }
+
+    if (activeIndustries.length > 0) {
+      result = result.filter((d) =>
+        activeIndustries.some((ind) => d.industries.includes(ind)),
       )
     }
 
-    if (sortBy === 'title') {
-      result = [...result].sort((a, b) => a.title.localeCompare(b.title))
-    } else {
-      result = [...result].sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    if (activeClients.length > 0) {
+      result = result.filter((d) =>
+        activeClients.some((c) => d.client === c),
       )
     }
 
-    return result
-  }, [projects, query, activeProduct, activeIndustries, activeTags, sortBy, fuse])
+    if (liveDemo === true) {
+      result = result.filter((d) => d.isLiveDemo)
+    } else if (liveDemo === false) {
+      result = result.filter((d) => !d.isLiveDemo)
+    }
 
-  return filtered
+    const isSceneDemo = (d: Demo) =>
+      d.product === 'Datum Teller' &&
+      d.tags.some((t) => t.toLowerCase() === 'scene demos')
+
+    const isTellerActive = activeProduct === 'datum-teller'
+
+    const regularDemos = isTellerActive
+      ? result.filter((d) => !isSceneDemo(d))
+      : result
+    const sceneDemos = isTellerActive ? result.filter(isSceneDemo) : []
+
+    const sortFn = (a: Demo, b: Demo) =>
+      sortBy === 'demoName'
+        ? a.demoName.localeCompare(b.demoName)
+        : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+
+    return {
+      regularDemos: [...regularDemos].sort(sortFn),
+      sceneDemos: [...sceneDemos].sort(sortFn),
+      sceneDemosCount: sceneDemos.length,
+    }
+  }, [nonCoverDemos, activeProduct, activeTags, activeIndustries, activeClients, liveDemo, sortBy, fuse])
 }
