@@ -45,5 +45,3 @@ Intructions.zip
 Intructions/
 project-update/
 
-# sensitive data
-src/data/portfolio.csv
