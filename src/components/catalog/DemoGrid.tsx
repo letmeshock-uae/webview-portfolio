@@ -21,13 +21,15 @@ export function DemoGrid({ demos, sceneDemos = [], sceneDemosCount = 0 }: DemoGr
     return <EmptyState />
   }
 
-  const sceneCover = sceneDemos[0]?.coverImage || sceneDemos[0]?.coverUrl || null
+  const sceneThumbnails = sceneDemos
+    .map((d) => d.coverUrl || d.coverImage)
+    .filter((url): url is string => !!url)
 
   return (
     <div className="project-grid grid grid-cols-1 sm:grid-cols-2 gap-4">
       <AnimatePresence mode="popLayout">
         {showSceneCard && (
-          <SceneDemosCard key="scene-demos" count={sceneDemosCount} coverImage={sceneCover} />
+          <SceneDemosCard key="scene-demos" count={sceneDemosCount} thumbnails={sceneThumbnails} />
         )}
         {demos.map((demo) => (
           <DemoCard key={demo.id} demo={demo} />
