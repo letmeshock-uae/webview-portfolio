@@ -15,7 +15,7 @@ export function ProductBadge({ name, color }: ProductBadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium font-[var(--font-mono)]"
       style={{
         backgroundColor: `${badgeColor}15`,
         color: badgeColor,

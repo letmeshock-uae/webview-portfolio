@@ -51,14 +51,14 @@ export function DemoCard({ demo }: DemoCardProps) {
           {demo.tags.filter(t => t.toLowerCase() !== 'scene demos').map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center h-[22px] px-2 rounded-[var(--radius-xs)] text-[11px] font-medium bg-[var(--axion-card)] border border-[var(--border-subtle)] text-[var(--fg-tertiary)]"
+              className="inline-flex items-center h-[22px] px-2 rounded-[var(--radius-xs)] text-[11px] font-medium font-[var(--font-mono)] bg-[var(--axion-card)] border border-[var(--border-subtle)] text-[var(--fg-tertiary)]"
             >
               {tag}
             </span>
           ))}
           {demo.status && (
             <span
-              className="inline-flex items-center h-[22px] px-2 rounded-[var(--radius-xs)] text-[11px] font-medium"
+              className="inline-flex items-center h-[22px] px-2 rounded-[var(--radius-xs)] text-[11px] font-medium font-[var(--font-mono)]"
               style={{
                 background: demo.status === 'Active' ? 'rgba(59,199,125,0.1)' : 'rgba(255,205,41,0.1)',
                 color: demo.status === 'Active' ? 'var(--color-success)' : 'var(--color-warning)',
@@ -70,7 +70,7 @@ export function DemoCard({ demo }: DemoCardProps) {
           {demo.industries.slice(0, 2).map((ind) => (
             <span
               key={ind}
-              className="inline-flex items-center h-[22px] px-2 rounded-[var(--radius-xs)] text-[11px] font-medium bg-[var(--axion-card)] border border-[var(--border-subtle)] text-[var(--fg-tertiary)]"
+              className="inline-flex items-center h-[22px] px-2 rounded-[var(--radius-xs)] text-[11px] font-medium font-[var(--font-mono)] bg-[var(--axion-card)] border border-[var(--border-subtle)] text-[var(--fg-tertiary)]"
             >
               {ind}
             </span>

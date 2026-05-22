@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-sans: 'Geist', sans-serif;
   --font-display: 'Geist', sans-serif;
   --font-mono: 'Geist Mono', monospace;
 }

@@ -54,7 +54,7 @@ export function FilterBar({ demos }: FilterBarProps) {
                 onClick={() => toggleTag(tag)}
                 data-active={active}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-[28px] px-[10px] rounded-[var(--radius-sm)] border text-[12px] font-medium transition-all',
+                  'inline-flex items-center gap-1.5 h-[28px] px-[10px] rounded-[var(--radius-sm)] border text-[12px] font-medium font-[var(--font-mono)] transition-all',
                   'border-[var(--border-subtle)] text-[var(--fg-tertiary)] hover:border-[var(--border-base)] hover:text-[var(--fg-secondary)]',
                   'data-[active=true]:border-[var(--border-base)] data-[active=true]:bg-[rgba(255,255,255,0.05)] data-[active=true]:text-[var(--fg-on-active)]',
                 )}
@@ -80,7 +80,7 @@ export function FilterBar({ demos }: FilterBarProps) {
                 onClick={() => toggleIndustry(ind)}
                 data-active={active}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-[28px] px-[10px] rounded-[var(--radius-sm)] border text-[12px] font-medium transition-all',
+                  'inline-flex items-center gap-1.5 h-[28px] px-[10px] rounded-[var(--radius-sm)] border text-[12px] font-medium font-[var(--font-mono)] transition-all',
                   'border-[var(--border-subtle)] text-[var(--fg-tertiary)] hover:border-[var(--border-base)] hover:text-[var(--fg-secondary)]',
                   'data-[active=true]:border-[var(--border-base)] data-[active=true]:bg-[rgba(255,255,255,0.05)] data-[active=true]:text-[var(--fg-on-active)]',
                 )}
@@ -106,7 +106,7 @@ export function FilterBar({ demos }: FilterBarProps) {
                 onClick={() => toggleClient(client)}
                 data-active={active}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-[28px] px-[10px] rounded-[var(--radius-sm)] border text-[12px] font-medium transition-all',
+                  'inline-flex items-center gap-1.5 h-[28px] px-[10px] rounded-[var(--radius-sm)] border text-[12px] font-medium font-[var(--font-mono)] transition-all',
                   'border-[var(--border-subtle)] text-[var(--fg-tertiary)] hover:border-[var(--border-base)] hover:text-[var(--fg-secondary)]',
                   'data-[active=true]:border-[var(--border-base)] data-[active=true]:bg-[rgba(255,255,255,0.05)] data-[active=true]:text-[var(--fg-on-active)]',
                 )}

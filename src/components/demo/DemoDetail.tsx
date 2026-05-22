@@ -73,7 +73,7 @@ export function DemoDetail({ demo }: DemoDetailProps) {
             {demo.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center h-[28px] px-[10px] rounded-[var(--radius-sm)] text-[12px] font-medium bg-[var(--axion-card)] border border-[var(--border-subtle)] text-[var(--fg-tertiary)]"
+                className="inline-flex items-center h-[28px] px-[10px] rounded-[var(--radius-sm)] text-[12px] font-medium font-[var(--font-mono)] bg-[var(--axion-card)] border border-[var(--border-subtle)] text-[var(--fg-tertiary)]"
               >
                 {tag}
               </span>
