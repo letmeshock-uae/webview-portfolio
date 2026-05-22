@@ -44,3 +44,6 @@ next-env.d.ts
 Intructions.zip
 Intructions/
 project-update/
+
+# sensitive data
+src/data/portfolio.csv

@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
 
-const PASSWORD = 'datum-poc-2026!'
 const COOKIE_NAME = 'catalog-auth'
 const COOKIE_VALUE = 'authenticated'
 
 export async function POST(request: Request) {
   const { password } = await request.json()
+  const expected = process.env.GATE_PASSWORD
+  if (!expected) {
+    return NextResponse.json({ error: 'GATE_PASSWORD not configured' }, { status: 500 })
+  }
 
-  if (password !== PASSWORD) {
+  if (password !== expected) {
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 })
   }
 
